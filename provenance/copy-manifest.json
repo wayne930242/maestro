@@ -57,8 +57,8 @@
 			"archive": "provenance/upstream/docs/tools.md",
 			"classification": "split",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115)",
-				"blob": "851ba5137a869ca189b19c087a9bba49364fc553"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede)",
+				"blob": "e8516df2b193d55280931840f824abcc785a4b2f"
 			}
 		},
 		{
@@ -643,8 +643,8 @@
 			"blob": "8d1e996375c1d98443613cf7dce20211aa814650",
 			"archive": "provenance/upstream/pi-extension/subagents/catalog.ts",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115)",
-				"blob": "cce68f3469c1c78b0b7ff860a1989678fb373e33"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede)",
+				"blob": "6ed1a56d8da0581eaa7bb5ed8f8958786e2f351c"
 			}
 		},
 		{
@@ -802,8 +802,8 @@
 			"blob": "7720f5698f352b4ff909cadc8b09aa32ebe9dfd5",
 			"archive": "provenance/upstream/test/fixtures/tool-schema/current.json",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115)",
-				"blob": "b57311e4f3da00badf5c81ca5bb196477d378295"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede)",
+				"blob": "dea5255274ccd766cb4598599b57087452b91203"
 			}
 		},
 		{
