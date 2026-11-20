@@ -1,0 +1,672 @@
+import { randomUUID } from "node:crypto";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname, isAbsolute, join, win32 } from "node:path";
+import { homedir } from "node:os";
+import { getSubagentActivityFile } from "./activity-file.js";
+import { createLifecycle, } from "../../core/lifecycle.js";
+import { assertModelInScope, } from "../../core/routing.js";
+import { DECLARED_SKILLS_ENV, formatDeclaredSkillsEnv, parseDeclaredSkills, } from "../../core/declared-skills.js";
+import { shellQuote } from "../../core/shell.js";
+import { ACCEPT_FILE_ENV } from "../../core/accept.js";
+import { AcquisitionUncertainError, isAcquisitionUncertainError, WorktreeProvisioningError, } from "../../core/surface-provider.js";
+import { getSubagentProcessIdentityFile, } from "./process-identity.js";
+import { appendPersistentDeliveryLedger, createWorktreeSessionFork, seedSubagentSessionFile, writeSubagentSessionPolicy, writeSubagentSystemPrompt, } from "./session.js";
+import { buildSubagentToolAllowlist, childDepthAssignment, modelScopeArgs, modelScopeAssignment, safeName, shellComment, DEFAULT_CHILD_ENTRY_PATH, timestampForFile, } from "./launch-command.js";
+import { shellExitFileFor } from "./completion.js";
+import { PI_LAUNCH_SESSION_ENV, } from "./launch-operations.js";
+import { launchResumedPiSubagent } from "./launch-resume.js";
+/** Ownership transfer, not a retryable rejection. The initialized child is real. */
+export class AcquiredPiLaunchError extends Error {
+    child;
+    constructor(child, cause) {
+        super(`Launch outcome uncertain; ${child.worktree ? `worktree retained at ${child.worktree.path} (workspace ${child.worktree.workspaceId}); ` : `pane ${child.surface}; `}owner retained, no fallback: ${errorMessage(cause)}`, { cause });
+        this.name = "AcquiredPiLaunchError";
+        this.child = child;
+        child.launchFailure = this.message;
+    }
+}
+/**
+ * Launch one validated Pi-backed request. Lifecycle watching and parent
+ * delivery begin only after this transaction returns the running child.
+ */
+export async function launchPiSubagent(request, operations) {
+    if (request.kind === "resume")
+        return launchResumedPiSubagent(request, operations);
+    if (operations.nativeExecution &&
+        (request.worktree || request.handoff || request.surface))
+        throw new Error("Herdr Core supports ordinary native execution only; managed worktrees, handoffs and supplied panes are deferred");
+    // Last checks before any resource exists: the plan must be in the live
+    // scope, and the scope must be representable as the child's --models.
+    assertModelInScope(request.runtimePlan.model, { scope: request.modelScope });
+    modelScopeArgs(request.modelScope);
+    // Declared skill names must follow Pi's rules; a handoff carries none.
+    if (!request.handoff)
+        parseDeclaredSkills(request.behavior.skills);
+    return launchFreshPiSubagent(request, operations);
+}
+export async function launchPiWorktreeHandoff(request, operations) {
+    if (!request.worktree || !request.handoff) {
+        throw new Error("A worktree handoff requires a worktree and active leaf");
+    }
+    const running = await launchPiSubagent(request, operations);
+    if (!running.worktree) {
+        throw new Error("Worktree handoff did not create a managed worktree");
+    }
+    try {
+        await operations.focusWorkspace?.(running.worktree.workspaceId);
+    }
+    catch (error) {
+        const focusError = errorMessage(error);
+        requireWorktreeOperations(operations).writeWorktreeManifest(running.worktree.manifestFile, {
+            state: "running",
+            focusError,
+        });
+        return {
+            running,
+            focusError,
+        };
+    }
+    return { running };
+}
+async function launchFreshPiSubagent(request, operations) {
+    const resolved = resolveLaunchRequest(request);
+    if (operations.nativeExecution)
+        return launchNativePiSubagent(resolved, operations);
+    let surface;
+    let running;
+    try {
+        request.acquisitionSignal?.throwIfAborted();
+        surface = await prepareLaunchSurface(resolved, operations);
+        request.acquisitionSignal?.throwIfAborted();
+        const session = prepareChildSession(resolved, surface, operations);
+        const handoffArtifacts = request.handoff
+            ? prepareTaskArtifacts(resolved, session, operations)
+            : undefined;
+        await confirmShellReady(session, operations);
+        const artifacts = handoffArtifacts ?? prepareTaskArtifacts(resolved, session, operations);
+        request.acquisitionSignal?.throwIfAborted();
+        const command = buildPiCommand(resolved, artifacts);
+        if (artifacts.worktree && !request.handoff) {
+            requireWorktreeOperations(operations).persistWorktreeResult(artifacts.worktree, "running");
+        }
+        request.acquisitionSignal?.throwIfAborted();
+        // Complete fallible initialization while this transaction still owns the
+        // surface, before any child can run or mutate its session artifacts.
+        const initialized = {
+            ...createRunningChild(resolved, artifacts),
+            surface: requiredSurface(artifacts),
+        };
+        try {
+            initialized.launchScriptFile = await startPiProcess(resolved, artifacts, command, initialized.launchScriptFile, operations);
+        }
+        catch (error) {
+            if (isAcquisitionUncertainError(error) &&
+                error.uncertainty.kind === "command-dispatch")
+                running = initialized;
+            throw error;
+        }
+        running = initialized;
+        if (request.handoff) {
+            if (!operations.waitForPiReady) {
+                throw new Error("Pi startup confirmation is unavailable");
+            }
+            await operations.waitForPiReady(requiredSurface(artifacts), artifacts.sessionFile, artifacts.targetCwd);
+            if (artifacts.worktree) {
+                requireWorktreeOperations(operations).persistWorktreeResult(artifacts.worktree, "running");
+            }
+        }
+        startProcessIdentityCapture(running, operations);
+        return running;
+    }
+    catch (error) {
+        if (!surface)
+            throw error;
+        if (running)
+            startProcessIdentityCapture(running, operations);
+        if (!surface.worktree) {
+            if (!request.surface) {
+                try {
+                    await operations.closePane(requiredSurface(surface));
+                }
+                catch (rollback) {
+                    if (running)
+                        throw new AcquiredPiLaunchError(running, new Error(`${errorMessage(error)}; rollback unconfirmed: ${errorMessage(rollback)}`, { cause: error }));
+                    throw new AcquisitionUncertainError(`${errorMessage(error)}; rollback unconfirmed: ${errorMessage(rollback)}; pane retained: ${surface.surface}; no fallback`, {
+                        kind: "surface-create",
+                        placement: "tab",
+                        observedSurfaceId: surface.surface,
+                    }, { cause: error });
+                }
+            }
+            if (running)
+                throw new AcquiredPiLaunchError(running, error);
+            throw error;
+        }
+        if (running) {
+            try {
+                const worktreeOps = requireWorktreeOperations(operations);
+                // Interactive handoffs have no runtime finalizer. Watched children capture there once.
+                const handoff = request.handoff
+                    ? await worktreeOps.captureWorktreeHandoff(surface.worktree)
+                    : undefined;
+                worktreeOps.persistWorktreeResult(surface.worktree, "failed", handoff);
+                worktreeOps.writeWorktreeManifest(surface.worktree.manifestFile, {
+                    acquisitionUncertain: true,
+                    error: errorMessage(error),
+                });
+            }
+            catch {
+                /* transfer ownership even if evidence persistence fails */
+            }
+            throw new AcquiredPiLaunchError(running, error);
+        }
+        const worktreeOps = requireWorktreeOperations(operations);
+        let handoff;
+        try {
+            handoff = await worktreeOps.captureWorktreeHandoff(surface.worktree);
+        }
+        catch {
+            /* preserve launch failure */
+        }
+        try {
+            worktreeOps.persistWorktreeResult(surface.worktree, "failed", handoff);
+        }
+        catch {
+            // The launch error remains authoritative when persistence also fails.
+        }
+        throw new Error(`Failed to launch subagent; worktree retained at ${surface.worktree.path} ` +
+            `(workspace ${surface.worktree.workspaceId}): ${errorMessage(error)}`);
+    }
+}
+async function launchNativePiSubagent(resolved, operations) {
+    const execution = operations.nativeExecution;
+    if (!execution)
+        throw new Error("Native execution unavailable");
+    const { request } = resolved;
+    request.acquisitionSignal?.throwIfAborted();
+    const session = prepareChildSession(resolved, {
+        targetCwd: resolved.sourceCwd,
+        effectiveAgentDir: resolved.localAgentDir ?? resolved.agentDir,
+        localAgentDir: resolved.localAgentDir,
+    }, operations);
+    const artifacts = prepareTaskArtifacts(resolved, session, operations);
+    const command = buildPiCommand(resolved, artifacts);
+    // This also writes the persistent dispatch ledger. Nothing fallible remains
+    // locally after submission, and no surface ID exists until Core replies.
+    const initialized = createRunningChild(resolved, artifacts);
+    try {
+        const surface = await execution.start({
+            cwd: artifacts.targetCwd,
+            command,
+            scriptPath: initialized.launchScriptFile,
+            scriptPreamble: shellComment(`Subagent launch script for ${request.name}`),
+            signal: request.acquisitionSignal,
+        });
+        return { ...initialized, surface };
+    }
+    catch (error) {
+        if (isAcquisitionUncertainError(error) &&
+            error.uncertainty.kind === "execution-start" &&
+            error.uncertainty.acquiredSurfaceId)
+            throw new AcquiredPiLaunchError({ ...initialized, surface: error.uncertainty.acquiredSurfaceId }, error);
+        throw error;
+    }
+}
+function requiredSurface(surface) {
+    if (!surface.surface)
+        throw new Error("Shell launch requires an acquired surface");
+    return surface.surface;
+}
+function resolveLaunchRequest(request) {
+    const id = request.id ?? Math.random().toString(16).slice(2, 10);
+    const agentDir = request.parent.agentDir ??
+        process.env.PI_CODING_AGENT_DIR ??
+        join(homedir(), ".pi", "agent");
+    const rawCwd = request.cwd ?? request.behavior.cwd;
+    const cwdBase = request.cwd == null && request.behavior.cwd != null
+        ? agentDir
+        : (request.parent.invocationCwd ?? request.parent.cwd);
+    const sourceCwd = rawCwd
+        ? isAbsolute(rawCwd) || win32.isAbsolute(rawCwd)
+            ? rawCwd
+            : join(cwdBase, rawCwd)
+        : request.parent.cwd;
+    const localAgentDir = rawCwd ? join(sourceCwd, ".pi", "agent") : null;
+    let sessionMode = request.behavior.sessionMode;
+    if (request.fork === true)
+        sessionMode = "fork";
+    else if (request.fork === false)
+        sessionMode = "standalone";
+    return {
+        request,
+        id,
+        startTime: Date.now(),
+        agentDir,
+        localAgentDir: localAgentDir && existsSync(localAgentDir) ? localAgentDir : null,
+        sourceCwd,
+        artifactDir: join(request.parent.sessionDir, "artifacts", request.parent.sessionId),
+        sessionMode,
+        taskDelivery: sessionMode === "fork" ? "direct" : "artifact",
+    };
+}
+async function prepareLaunchSurface(resolved, operations) {
+    const { request } = resolved;
+    if (!request.worktree) {
+        return {
+            surface: request.surface ??
+                (await operations.createPane(request.name, resolved.sourceCwd, {
+                    signal: request.acquisitionSignal,
+                })),
+            targetCwd: resolved.sourceCwd,
+            effectiveAgentDir: resolved.localAgentDir ?? resolved.agentDir,
+            localAgentDir: resolved.localAgentDir,
+        };
+    }
+    if (request.surface)
+        throw new Error("A worktree subagent cannot use a pre-created pane");
+    const worktreeOps = requireWorktreeOperations(operations);
+    const baseRef = request.worktree.base ?? "HEAD";
+    const baseSha = await worktreeOps.resolveGitCommit(resolved.sourceCwd, baseRef);
+    const provisionCwd = await worktreeOps.resolveWorktreeProvisionCwd(resolved.sourceCwd);
+    const manifestFile = join(resolved.artifactDir, "worktree-runs", `${resolved.id}.json`);
+    const ownership = {
+        id: resolved.id,
+        name: request.name,
+        sourceCwd: resolved.sourceCwd,
+        branch: request.worktree.branch,
+        baseRef,
+        baseSha,
+        createdAt: resolved.startTime,
+    };
+    worktreeOps.writeWorktreeManifest(manifestFile, {
+        state: "provisioning",
+        ...ownership,
+    });
+    let created;
+    try {
+        created = await operations.createWorktree(request.name, provisionCwd, request.worktree.branch, baseSha, { signal: request.acquisitionSignal });
+    }
+    catch (error) {
+        const failedManifest = {
+            state: "failed",
+            ...ownership,
+        };
+        if (error instanceof WorktreeProvisioningError) {
+            Object.assign(failedManifest, error.recoveredWorktree);
+        }
+        if (isAcquisitionUncertainError(error) &&
+            error.uncertainty.kind === "worktree-create") {
+            Object.assign(failedManifest, error.uncertainty.recovered, {
+                acquisitionUncertain: true,
+            });
+        }
+        failedManifest.error = errorMessage(error);
+        try {
+            worktreeOps.writeWorktreeManifest(manifestFile, failedManifest);
+        }
+        catch {
+            /* original acquisition failure remains authoritative */
+        }
+        if (isAcquisitionUncertainError(error))
+            throw new AcquisitionUncertainError(`${error.message}; ownership manifest retained at ${manifestFile}`, error.uncertainty, { cause: error });
+        throw error;
+    }
+    const worktree = {
+        path: created.path,
+        workspaceId: created.workspaceId,
+        paneId: created.paneId,
+        branch: created.branch,
+        baseRef,
+        baseSha,
+        manifestFile,
+    };
+    if (created.diagnostics?.length)
+        worktree.diagnostics = created.diagnostics;
+    try {
+        const seedWarnings = await worktreeOps.seedProjectPackages(resolved.sourceCwd, created.path);
+        if (seedWarnings.length)
+            (worktree.diagnostics ??= []).push(...seedWarnings);
+    }
+    catch (error) {
+        (worktree.diagnostics ??= []).push(`Project package seeding failed: ${errorMessage(error)}`);
+    }
+    try {
+        worktreeOps.writeWorktreeManifest(manifestFile, {
+            state: "provisioned",
+            ...ownership,
+            ...worktree,
+        });
+    }
+    catch (error) {
+        // Preserve the known retained root even when a manifest update fails.
+        (worktree.diagnostics ??= []).push(`Manifest update failed: ${errorMessage(error)}`);
+    }
+    const isolatedAgentDir = join(created.path, ".pi", "agent");
+    const hasIsolatedAgentDir = existsSync(isolatedAgentDir);
+    return {
+        surface: created.paneId,
+        targetCwd: created.path,
+        effectiveAgentDir: hasIsolatedAgentDir
+            ? isolatedAgentDir
+            : resolved.agentDir,
+        localAgentDir: hasIsolatedAgentDir ? isolatedAgentDir : null,
+        worktree,
+    };
+}
+function prepareChildSession(resolved, surface, operations) {
+    const sessionDir = getDefaultSessionDirFor(surface.targetCwd, surface.effectiveAgentDir);
+    const timestamp = timestampForFile();
+    const uuid = [
+        resolved.id,
+        Math.random().toString(16).slice(2, 10),
+        Math.random().toString(16).slice(2, 10),
+        Math.random().toString(16).slice(2, 6),
+    ].join("-");
+    const sessionFile = join(sessionDir, `${timestamp}_${uuid}.jsonl`);
+    if (surface.worktree) {
+        surface.worktree.sessionFile = sessionFile;
+        requireWorktreeOperations(operations).writeWorktreeManifest(surface.worktree.manifestFile, { sessionFile });
+    }
+    const policy = writeSubagentSessionPolicy(sessionFile, {
+        owner: surface.worktree ? "managed-worktree" : "public",
+        tools: resolved.request.behavior.tools,
+        deniedTools: resolved.request.behavior.deniedTools,
+        persistent: resolved.request.behavior.persistent,
+        logicalId: resolved.request.behavior.logicalId ?? resolved.id,
+        generationId: resolved.request.behavior.generationId,
+        agent: resolved.request.handoff ? null : (resolved.request.agent ?? null),
+        selfSpawn: !resolved.request.handoff &&
+            Boolean(resolved.request.agent) &&
+            Boolean(resolved.request.behavior.selfSpawn),
+        worktree: surface.worktree
+            ? {
+                path: surface.worktree.path,
+                workspaceId: surface.worktree.workspaceId,
+                branch: surface.worktree.branch,
+                baseSha: surface.worktree.baseSha,
+            }
+            : undefined,
+    });
+    const activityFile = getSubagentActivityFile(resolved.artifactDir, resolved.id);
+    return {
+        ...surface,
+        sessionFile,
+        activityFile,
+        policy,
+        initialTaskId: policy.persistent
+            ? (resolved.request.behavior.taskId ?? randomUUID())
+            : undefined,
+        // A handoff Pi loads no child protocol extension, so it records nothing.
+        processIdentityFile: (surface.worktree || resolved.request.surface) &&
+            !resolved.request.handoff
+            ? getSubagentProcessIdentityFile(sessionFile)
+            : undefined,
+    };
+}
+async function confirmShellReady(session, operations) {
+    await operations.waitForShellReady(requiredSurface(session));
+}
+function buildWorktreeHandoffMessage(request, worktree, sessionFile) {
+    const task = request.task.slice(0, 2000);
+    return [
+        "Worktree handoff context:",
+        `Branch: ${worktree.branch}`,
+        `Base commit: ${worktree.baseSha}`,
+        `Worktree: ${worktree.path}`,
+        `Source session: ${request.parent.sessionFile}`,
+        `Fork session: ${sessionFile}`,
+        "",
+        "Requested task:",
+        task || "Continue the current work in this worktree.",
+    ].join("\n");
+}
+function prepareTaskArtifacts(resolved, session, operations) {
+    const { request } = resolved;
+    if (request.handoff) {
+        if (!session.worktree) {
+            throw new Error("A worktree handoff requires a managed worktree");
+        }
+        const handoffMessage = buildWorktreeHandoffMessage(request, session.worktree, session.sessionFile);
+        createWorktreeSessionFork({
+            parentSessionFile: request.parent.sessionFile,
+            leafId: request.handoff.leafId,
+            childSessionFile: session.sessionFile,
+            childCwd: session.targetCwd,
+            handoffMessage,
+        });
+        session.worktree.sourceSessionFile = request.parent.sessionFile;
+        session.worktree.handoffMessage = handoffMessage;
+        requireWorktreeOperations(operations).writeWorktreeManifest(session.worktree.manifestFile, {
+            sourceSessionFile: request.parent.sessionFile,
+            handoffMessage,
+        });
+    }
+    else if (resolved.sessionMode !== "standalone") {
+        seedSubagentSessionFile({
+            mode: resolved.sessionMode,
+            parentSessionFile: request.parent.sessionFile,
+            childSessionFile: session.sessionFile,
+            childCwd: session.targetCwd,
+        });
+    }
+    mkdirSync(dirname(session.activityFile), { recursive: true });
+    const identityInSystemPrompt = request.behavior.systemPromptMode && request.behavior.identity;
+    const roleBlock = request.behavior.identity && !identityInSystemPrompt
+        ? `\n\n${request.behavior.identity}`
+        : "";
+    const modeHint = request.behavior.autoExit
+        ? "Complete your task autonomously."
+        : "Complete your task. When finished, call the subagent_done tool. The user can interact with you at any time.";
+    const summaryInstruction = request.behavior.autoExit
+        ? "Your FINAL assistant message should summarize what you accomplished."
+        : "Your FINAL assistant message (before calling subagent_done or before the user exits) should summarize what you accomplished.";
+    const fullTask = request.handoff
+        ? request.task
+        : resolved.sessionMode === "fork"
+            ? request.task
+            : `${roleBlock}\n\n${modeHint}\n\n${request.task}\n\n${summaryInstruction}`;
+    let taskArg = fullTask;
+    if (resolved.taskDelivery === "artifact" && !request.handoff) {
+        const artifactPath = join(resolved.artifactDir, `context/${safeName(request.name) || "subagent"}-${timestampForFile(false)}.md`);
+        mkdirSync(dirname(artifactPath), { recursive: true });
+        writeFileSync(artifactPath, fullTask, "utf8");
+        taskArg = `@${artifactPath}`;
+    }
+    let systemPromptFile;
+    if (identityInSystemPrompt) {
+        systemPromptFile = join(resolved.artifactDir, `context/${safeName(request.name) || "subagent"}-sysprompt-${timestampForFile(false)}.md`);
+        mkdirSync(dirname(systemPromptFile), { recursive: true });
+        writeFileSync(systemPromptFile, identityInSystemPrompt, "utf8");
+        // Resume passes the same prompt again, so its system prompt never changes.
+        writeSubagentSystemPrompt(session.sessionFile, {
+            mode: request.behavior.systemPromptMode === "replace" ? "replace" : "append",
+            prompt: identityInSystemPrompt,
+        });
+    }
+    // A file, never the raw command in the launch environment or script.
+    let acceptFile;
+    if (request.accept && !request.handoff) {
+        acceptFile = join(resolved.artifactDir, `context/${safeName(request.name) || "subagent"}-accept-${resolved.id}.json`);
+        mkdirSync(dirname(acceptFile), { recursive: true });
+        writeFileSync(acceptFile, JSON.stringify({ version: 1, ...request.accept }), "utf8");
+    }
+    return { ...session, taskArg, systemPromptFile, acceptFile };
+}
+function buildPiCommand(resolved, artifacts) {
+    const { request } = resolved;
+    const parts = [
+        "pi",
+        "--session",
+        shellQuote(artifacts.sessionFile),
+        ...(request.handoff
+            ? []
+            : ["-e", shellQuote(request.childEntryPath ?? DEFAULT_CHILD_ENTRY_PATH)]),
+        "--model",
+        shellQuote(request.runtimePlan.model),
+        "--thinking",
+        shellQuote(request.runtimePlan.thinking),
+        ...modelScopeArgs(request.modelScope),
+    ];
+    if (artifacts.systemPromptFile) {
+        parts.push(request.behavior.systemPromptMode === "replace"
+            ? "--system-prompt"
+            : "--append-system-prompt", shellQuote(artifacts.systemPromptFile));
+    }
+    const notify = !request.handoff &&
+        request.behavior.persistent === true &&
+        request.behavior.notify === true;
+    const toolAllowlist = buildSubagentToolAllowlist(request.behavior.tools, request.behavior.autoExit, notify);
+    if (toolAllowlist)
+        parts.push("--tools", shellQuote(toolAllowlist));
+    if (!request.handoff)
+        parts.push(shellQuote(artifacts.taskArg));
+    const env = [
+        `${PI_LAUNCH_SESSION_ENV}=${shellQuote(artifacts.sessionFile)}`,
+        childDepthAssignment(resolved.request.handoff ? "handoff" : "child"),
+        modelScopeAssignment(request.modelScope),
+        // Explicit on every path, including a handoff, so an opt-in left in the
+        // pane's shell never reaches a session whose role did not declare it.
+        `PI_SUBAGENT_SELF_SPAWN=${!request.handoff && request.agent && request.behavior.selfSpawn ? "1" : "0"}`,
+    ];
+    if (artifacts.localAgentDir) {
+        env.push(`PI_CODING_AGENT_DIR=${shellQuote(artifacts.localAgentDir)}`);
+    }
+    else if (process.env.PI_CODING_AGENT_DIR) {
+        env.push(`PI_CODING_AGENT_DIR=${shellQuote(process.env.PI_CODING_AGENT_DIR)}`);
+    }
+    if (!request.handoff) {
+        if (request.behavior.deniedTools.length > 0) {
+            env.push(`PI_DENY_TOOLS=${shellQuote(request.behavior.deniedTools.join(","))}`);
+        }
+        env.push(`PI_SUBAGENT_NAME=${shellQuote(request.name)}`);
+        if (request.agent)
+            env.push(`PI_SUBAGENT_AGENT=${shellQuote(request.agent)}`);
+        env.push(`PI_SUBAGENT_AUTO_EXIT=${request.behavior.autoExit ? "1" : "0"}`);
+        if (request.behavior.solutionSpace)
+            env.push(`PI_SUBAGENT_SOLUTION_SPACE=${shellQuote(request.behavior.solutionSpace)}`);
+        if (artifacts.acceptFile)
+            env.push(`${ACCEPT_FILE_ENV}=${shellQuote(artifacts.acceptFile)}`);
+        // Names only, always set: the child's own Pi decides which skills exist.
+        env.push(`${DECLARED_SKILLS_ENV}=${shellQuote(formatDeclaredSkillsEnv(parseDeclaredSkills(request.behavior.skills)))}`);
+        if (request.behavior.persistent) {
+            env.push("PI_SUBAGENT_PERSISTENT=1");
+            env.push(`PI_SUBAGENT_GENERATION_ID=${shellQuote(artifacts.policy.generationId)}`);
+            env.push(`PI_SUBAGENT_TASK_ID=${shellQuote(artifacts.initialTaskId)}`);
+            // Explicit either way, so an opt-in left in the pane's shell never leaks.
+            env.push(`PI_SUBAGENT_NOTIFY=${notify ? "1" : "0"}`);
+        }
+        env.push(`PI_SUBAGENT_SESSION=${shellQuote(artifacts.sessionFile)}`);
+        env.push(`PI_SUBAGENT_ID=${shellQuote(resolved.id)}`);
+        env.push(`PI_SUBAGENT_ACTIVITY_FILE=${shellQuote(artifacts.activityFile)}`);
+        if (artifacts.surface)
+            env.push(`PI_SUBAGENT_SURFACE=${shellQuote(artifacts.surface)}`);
+        if (artifacts.processIdentityFile)
+            env.push(`PI_SUBAGENT_PROCESS_FILE=${shellQuote(artifacts.processIdentityFile)}`);
+    }
+    const piCommand = `cd ${shellQuote(artifacts.targetCwd)} && ` +
+        `${env.join(" ")} ${parts.join(" ")}`;
+    if (request.handoff)
+        return piCommand;
+    if (!artifacts.surface)
+        return `${piCommand}; piha_exit=$?; echo "__SUBAGENT_DONE_\${piha_exit}__"; exit "$piha_exit"`;
+    // A persistent stop needs exit evidence that a shell prompt cannot scroll
+    // off the screen, as the marker can (#143); the shell writes it after Pi exits.
+    if (request.behavior.persistent)
+        return `${piCommand}; piha_exit=$?; printf '%s\\n' "$piha_exit" > ${shellQuote(shellExitFileFor(artifacts.sessionFile))} 2>/dev/null; echo "__SUBAGENT_DONE_\${piha_exit}__"`;
+    return `${piCommand}; echo '__SUBAGENT_DONE_'$?'__'`;
+}
+async function startPiProcess(resolved, artifacts, command, launchScriptFile, operations) {
+    return await operations.runScript(requiredSurface(artifacts), command, {
+        scriptPath: launchScriptFile,
+        scriptPreamble: [
+            shellComment(`Subagent launch script for ${resolved.request.name}`),
+            shellComment(`Generated: ${new Date().toISOString()}`),
+            shellComment(`Session: ${artifacts.sessionFile}`),
+            shellComment(`Surface: ${artifacts.surface}`),
+        ].join("\n"),
+    });
+}
+function createRunningChild(resolved, artifacts) {
+    const child = {
+        id: resolved.id,
+        name: resolved.request.name,
+        task: resolved.request.task,
+        agent: resolved.request.agent,
+        ownsSurface: !artifacts.worktree && !resolved.request.surface,
+        startTime: resolved.startTime,
+        sessionFile: artifacts.sessionFile,
+        launchScriptFile: join(resolved.artifactDir, "subagent-scripts", `${safeName(resolved.request.name) || "subagent"}-${resolved.id}.sh`),
+        activityFile: artifacts.activityFile,
+        interactive: resolved.request.behavior.interactive,
+        runtimePlan: resolved.request.runtimePlan,
+        worktree: artifacts.worktree,
+        cwd: artifacts.targetCwd,
+        // A handoff loads no child protocol, so it never carries a check.
+        accept: resolved.request.handoff ? undefined : resolved.request.accept,
+        lifecycle: createLifecycle(resolved.startTime),
+        processIdentityFile: artifacts.processIdentityFile,
+    };
+    const { policy, initialTaskId } = artifacts;
+    if (policy.persistent) {
+        Object.assign(child, {
+            persistent: true,
+            logicalId: policy.logicalId,
+            generationId: policy.generationId,
+            policyHash: policy.policyHash,
+            policyTools: policy.tools,
+            policyDeniedTools: policy.deniedTools,
+            tasksCompleted: 0,
+            taskId: initialTaskId,
+            issuedTaskIds: [initialTaskId],
+            inboxSequence: 0,
+            observedTaskEvents: 0,
+        });
+        if (resolved.request.behavior.notify === true && !resolved.request.handoff)
+            child.notify = true;
+        appendPersistentDeliveryLedger(child.sessionFile, {
+            task: initialTaskId,
+            outcome: "dispatched",
+            generation: policy.generationId,
+            logicalId: policy.logicalId,
+            policyHash: policy.policyHash,
+        });
+    }
+    return child;
+}
+// Capture runs beside the launch so readiness never delays the acknowledgement;
+// a cancel awaits it, and without a verified identity nothing is signalled. A
+// cancel after an expired capture starts a fresh one bounded by its own budget.
+export function startProcessIdentityCapture(child, operations, options) {
+    const file = child.processIdentityFile;
+    if (!file)
+        return;
+    const capture = operations.captureProcessIdentity;
+    if (!capture) {
+        child.processIdentityError = "process identity capture is unavailable";
+        return;
+    }
+    child.processIdentityLastError =
+        child.processIdentityError ?? child.processIdentityLastError;
+    child.processIdentityError = undefined;
+    child.processIdentityCapture = Promise.resolve()
+        .then(() => capture(child.surface, { file, id: child.id, sessionFile: child.sessionFile }, options))
+        .then((identity) => (child.processIdentity = identity), (error) => {
+        child.processIdentityError = errorMessage(error);
+        return undefined;
+    });
+}
+function getDefaultSessionDirFor(cwd, agentDir) {
+    const safePath = `--${cwd.replace(/^[/\\]/, "").replace(/[/\\:]/g, "-")}--`;
+    const sessionDir = join(agentDir, "sessions", safePath);
+    mkdirSync(sessionDir, { recursive: true });
+    return sessionDir;
+}
+function requireWorktreeOperations(operations) {
+    if (!operations.worktree)
+        throw new Error("Worktree operations are unavailable");
+    return operations.worktree;
+}
+function errorMessage(error) {
+    return error instanceof Error ? error.message : String(error);
+}
+//# sourceMappingURL=launch.js.map

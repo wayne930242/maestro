@@ -1,0 +1,1 @@
+{"version":3,"file":"role-config.d.ts","sourceRoot":"","sources":["../../../../maestro/core/config/role-config.ts"],"names":[],"mappings":"AAIA,MAAM,WAAW,UAAU;IAC1B,oEAAoE;IACpE,YAAY,EAAE,MAAM,EAAE,CAAC;CACvB;AAMD,wBAAgB,eAAe,CAC9B,SAAS,EAAE,GAAG,EACd,MAAM,SAAgB,GACpB,UAAU,CA6BZ;AAuCD,wBAAgB,cAAc,CAC7B,SAAS,EAAE,MAAM,EACjB,WAAW,EAAE,MAAM,GACjB,UAAU,CAWZ"}

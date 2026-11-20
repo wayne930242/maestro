@@ -1,0 +1,1 @@
+{"version":3,"file":"shell.js","sourceRoot":"","sources":["../../../maestro/core/shell.ts"],"names":[],"mappings":"AAAA,MAAM,UAAU,UAAU,CAAC,KAAa;IACvC,OAAO,GAAG,GAAG,KAAK,CAAC,OAAO,CAAC,IAAI,EAAE,OAAO,CAAC,GAAG,GAAG,CAAC;AACjD,CAAC","sourcesContent":["export function shellQuote(value: string): string {\n\treturn \"'\" + value.replace(/'/g, \"'\\\\''\") + \"'\";\n}\n"]}

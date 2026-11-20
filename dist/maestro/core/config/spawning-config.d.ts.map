@@ -1,0 +1,1 @@
+{"version":3,"file":"spawning-config.d.ts","sourceRoot":"","sources":["../../../../maestro/core/config/spawning-config.ts"],"names":[],"mappings":"AAKA,MAAM,WAAW,cAAc;IAC9B,yEAAyE;IACzE,QAAQ,EAAE,MAAM,CAAC;CACjB;AAMD,wBAAgB,mBAAmB,CAClC,SAAS,EAAE,GAAG,EACd,MAAM,SAAgB,GACpB,cAAc,CA6BhB;AAED,wBAAgB,kBAAkB,CACjC,SAAS,EAAE,MAAM,EACjB,WAAW,EAAE,MAAM,GACjB,cAAc,CAgChB"}
