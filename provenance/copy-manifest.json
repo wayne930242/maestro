@@ -191,8 +191,8 @@
 			"blob": "16c33eddff2f333e3dfa99031240b105078a6ac1",
 			"archive": "provenance/upstream/maestro/adapters/pi/launch.ts",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0)",
-				"blob": "afe0bed15c77bc0bfb70e6bc9aea9ee6148ba22d"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0) | weihung fork: seed installed project packages (.pi/npm, .pi/git) into new managed worktrees (pi-herdr-agents fork f16666b)",
+				"blob": "cc6b9844e5fc5a24fce7319e300f87c7581f1b64"
 			}
 		},
 		{
@@ -548,7 +548,11 @@
 			"source": "maestro/core/worktree.ts",
 			"destination": "maestro/core/worktree.ts",
 			"blob": "edd659a9b35f98bf21a7ad8e16e0153e3c7b00ca",
-			"archive": "provenance/upstream/maestro/core/worktree.ts"
+			"archive": "provenance/upstream/maestro/core/worktree.ts",
+			"owned_change": {
+				"reason": "weihung fork: seed installed project packages (.pi/npm, .pi/git) into new managed worktrees (pi-herdr-agents fork f16666b)",
+				"blob": "47e34679bfc577ed19390fd9f076bd0479aa1f1e"
+			}
 		},
 		{
 			"kind": "copy",
@@ -639,7 +643,11 @@
 			"source": "maestro/runtime/worktree-operations.ts",
 			"destination": "maestro/runtime/worktree-operations.ts",
 			"blob": "6477c19e280632a21fa8fa2811f2fb25babf1b3c",
-			"archive": "provenance/upstream/maestro/runtime/worktree-operations.ts"
+			"archive": "provenance/upstream/maestro/runtime/worktree-operations.ts",
+			"owned_change": {
+				"reason": "weihung fork: seed installed project packages (.pi/npm, .pi/git) into new managed worktrees (pi-herdr-agents fork f16666b)",
+				"blob": "1906530b545b5d102d868bc2fe3d1cf97f982d35"
+			}
 		},
 		{
 			"kind": "copy",

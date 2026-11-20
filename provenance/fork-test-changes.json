@@ -28,5 +28,15 @@
 		"destination": "test/tools-monolith.test.ts",
 		"title": "returns saved tool details and text from normalized config while preserving unrelated preferences",
 		"reason": "weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514)"
+	},
+	{
+		"destination": "test/maestro/windows-support-scope-pi.test.ts",
+		"title": "async function genericSpawn(",
+		"reason": "weihung fork: WorktreeOperations.seedProjectPackages joins the fake operations (pi-herdr-agents fork f16666b)"
+	},
+	{
+		"destination": "test/maestro/windows-support-scope-tools.test.ts",
+		"title": "async function loadHost(",
+		"reason": "weihung fork: WorktreeOperations.seedProjectPackages joins the fake operations (pi-herdr-agents fork f16666b)"
 	}
 ]
