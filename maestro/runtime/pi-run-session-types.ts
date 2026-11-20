@@ -297,6 +297,8 @@ export interface PiRunSessionInfrastructure {
 	supervision: SupervisionCoordinator;
 	/** Kernel process-identity probe for worktree cancel; tests inject it. */
 	processProbe?: ProcessIdentityProbe;
+	/** Re-observation period of an unconfirmed cancel; tests shorten it. */
+	terminationRecheckMs?: number;
 	/** The parent accept re-check's command runner; tests inject it. */
 	acceptRunner?: AcceptRunner;
 	/** Sidebar marker transport; no ambient discovery when injected. */

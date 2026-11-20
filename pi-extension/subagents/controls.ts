@@ -24,7 +24,7 @@ export const SUBAGENT_CANCEL_DESCRIPTION =
 	"The host stops its process and delivers exactly one cancelled result, with no model fallback, retry, or recovery. Do not poll for it. " +
 	"A legacy pane closes; Core confirms exit and removes its terminal record after delivery. " +
 	"A worktree child keeps the workspace, checkout, commits, and manifest. " +
-	"Returns confirmed, requested (launch still in flight), unconfirmed (still running; call again), or already-terminal. " +
+	"Returns confirmed, requested (launch still in flight), unconfirmed (still running and settles by itself if its pane or process is later seen gone; call again to retry), or already-terminal. " +
 	"Persistent specialists are rejected; use subagent_stop.";
 
 export const SUBAGENT_CANCEL_SNIPPET =
@@ -54,7 +54,7 @@ function cancelStatusText(
 		case "requested":
 			return `Cancel recorded for subagent "${name}"; its in-flight launch is terminated as soon as it is acquired. ${noRetry} One cancelled result will be delivered after termination is confirmed.`;
 		case "unconfirmed":
-			return `Cancel recorded for subagent "${name}", but termination is unconfirmed: ${encodeHostValue(report.error ?? "unknown error", HOST_ERROR_CHARS)}. The run stays live and owned. ${noRetry} Call subagent_cancel again to retry termination.`;
+			return `Cancel recorded for subagent "${name}", but termination is unconfirmed: ${encodeHostValue(report.error ?? "unknown error", HOST_ERROR_CHARS)}. The run stays live and owned, and settles as cancelled by itself if its pane or process is later seen gone. ${noRetry} Call subagent_cancel again to retry termination.`;
 		case "already-terminal":
 			return `Subagent "${name}" already reached a terminal result; nothing was cancelled.`;
 	}

@@ -214,8 +214,8 @@
 			"blob": "b329ef6e037d3f9874d1999a616b451fbb210633",
 			"archive": "provenance/upstream/maestro/adapters/pi/pi-harness-adapter.ts",
 			"owned_change": {
-				"reason": "#149: a non-zero exit with no errorMessage and no session messages reads the terminal tail into exitOutput, the read bounded by EXIT_OUTPUT_READ_TIMEOUT_MS. | weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0)",
-				"blob": "682a601e5831af78005c19318caca394614cffba"
+				"reason": "#149: a non-zero exit with no errorMessage and no session messages reads the terminal tail into exitOutput, the read bounded by EXIT_OUTPUT_READ_TIMEOUT_MS. | weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0) | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0)",
+				"blob": "c59dc0010da62f3afaafeaba226c2e1abd836ab8"
 			}
 		},
 		{
@@ -403,7 +403,11 @@
 			"source": "maestro/core/harness-adapter.ts",
 			"destination": "maestro/core/harness-adapter.ts",
 			"blob": "b2148810e1ede34b515b10e66438b0a467d725d7",
-			"archive": "provenance/upstream/maestro/core/harness-adapter.ts"
+			"archive": "provenance/upstream/maestro/core/harness-adapter.ts",
+			"owned_change": {
+				"reason": "weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0)",
+				"blob": "4cfdf75ecc03458320f990311e07430db42612a1"
+			}
 		},
 		{
 			"kind": "copy",
@@ -514,8 +518,8 @@
 			"blob": "8cd2d264f055d6e831ed6262c4b4e391375ea361",
 			"archive": "provenance/upstream/maestro/core/types.ts",
 			"owned_change": {
-				"reason": "#149: CompletionEvidence.exitOutput carries a child's last terminal lines when it fails before its session starts. | weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115)",
-				"blob": "6d99658c408533624bc17ec81e21a67689b80911"
+				"reason": "#149: CompletionEvidence.exitOutput carries a child's last terminal lines when it fails before its session starts. | weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0)",
+				"blob": "1497144bc81a6305896d1936bc2c2a39c94cf7d0"
 			}
 		},
 		{
@@ -587,7 +591,11 @@
 			"source": "maestro/runtime/pi-run-session-types.ts",
 			"destination": "maestro/runtime/pi-run-session-types.ts",
 			"blob": "38ce85d8dfcc8bdb09efda9cca40c755a23f8eaf",
-			"archive": "provenance/upstream/maestro/runtime/pi-run-session-types.ts"
+			"archive": "provenance/upstream/maestro/runtime/pi-run-session-types.ts",
+			"owned_change": {
+				"reason": "weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0)",
+				"blob": "177ddee72395ae175132e33f443bf296386df48f"
+			}
 		},
 		{
 			"kind": "copy",
@@ -597,8 +605,8 @@
 			"archive": "provenance/upstream/maestro/runtime/pi-run-session.ts",
 			"classification": "split",
 			"owned_change": {
-				"reason": "#149: the host summary of such an exit appends the relayed exitOutput.",
-				"blob": "6e3d394ac5cd21c0dae901e5850d2446c1689ddb"
+				"reason": "#149: the host summary of such an exit appends the relayed exitOutput. | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0)",
+				"blob": "b3c37f750cd89c2dabee4e0ef5a5fe1d9e234573"
 			}
 		},
 		{
@@ -606,7 +614,11 @@
 			"source": "maestro/runtime/run-session.ts",
 			"destination": "maestro/runtime/run-session.ts",
 			"blob": "2d0f444debb54698df366f1486cffff724db76bd",
-			"archive": "provenance/upstream/maestro/runtime/run-session.ts"
+			"archive": "provenance/upstream/maestro/runtime/run-session.ts",
+			"owned_change": {
+				"reason": "weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0)",
+				"blob": "ddc5c53b89fa4c83b4a851e96160ac2bf1a55940"
+			}
 		},
 		{
 			"kind": "copy",
@@ -683,7 +695,11 @@
 			"source": "pi-extension/subagents/controls.ts",
 			"destination": "pi-extension/subagents/controls.ts",
 			"blob": "4424d794faaae4074bef35f06f0f62b690ccb3a7",
-			"archive": "provenance/upstream/pi-extension/subagents/controls.ts"
+			"archive": "provenance/upstream/pi-extension/subagents/controls.ts",
+			"owned_change": {
+				"reason": "weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0)",
+				"blob": "b19c94e276ef181bea281464d23bb189c677975a"
+			}
 		},
 		{
 			"kind": "copy",
@@ -818,8 +834,8 @@
 			"blob": "7720f5698f352b4ff909cadc8b09aa32ebe9dfd5",
 			"archive": "provenance/upstream/test/fixtures/tool-schema/current.json",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede) | weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514)",
-				"blob": "7ee7fb403c2f6238ded8b4f99c4cb3092acbd40a"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede) | weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514) | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0)",
+				"blob": "585f2d2eb42fab79e6ed15c544a7d3d6845f2994"
 			}
 		},
 		{

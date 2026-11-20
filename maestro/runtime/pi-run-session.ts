@@ -317,6 +317,7 @@ export function createDefaultRunSession(
 			},
 			roles,
 			cwd: process.cwd(),
+			terminationRecheckMs: options.infrastructure?.terminationRecheckMs,
 			operations: {
 				async prepare(task, role) {
 					if (task.worktree)

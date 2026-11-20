@@ -158,7 +158,7 @@
 		{
 			"name": "subagent_cancel",
 			"scopes": ["parent", "child"],
-			"description": "Cancel a running non-persistent subagent, including an interrupted one. The host stops its process and delivers exactly one cancelled result, with no model fallback, retry, or recovery. Do not poll for it. A legacy pane closes; Core confirms exit and removes its terminal record after delivery. A worktree child keeps the workspace, checkout, commits, and manifest. Returns confirmed, requested (launch still in flight), unconfirmed (still running; call again), or already-terminal. Persistent specialists are rejected; use subagent_stop.",
+			"description": "Cancel a running non-persistent subagent, including an interrupted one. The host stops its process and delivers exactly one cancelled result, with no model fallback, retry, or recovery. Do not poll for it. A legacy pane closes; Core confirms exit and removes its terminal record after delivery. A worktree child keeps the workspace, checkout, commits, and manifest. Returns confirmed, requested (launch still in flight), unconfirmed (still running and settles by itself if its pane or process is later seen gone; call again to retry), or already-terminal. Persistent specialists are rejected; use subagent_stop.",
 			"parameters": {
 				"type": "object",
 				"properties": {
