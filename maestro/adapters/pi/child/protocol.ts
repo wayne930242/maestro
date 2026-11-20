@@ -22,6 +22,7 @@ import { isChildBusy } from "../../../core/child-busy.ts";
 import {
 	readOwnProcessIdentity,
 	writeProcessIdentityRecord,
+	type ProcessIdentityProbe,
 } from "../process-identity.ts";
 import { isString } from "../../../core/config/type-guards.ts";
 import { hasUndeliveredChildren } from "../../../core/undelivered-children.ts";
@@ -191,6 +192,7 @@ export function recordProcessIdentity(
 	id: string | undefined,
 	sessionFile: string | undefined,
 	file = process.env.PI_SUBAGENT_PROCESS_FILE,
+	probe?: ProcessIdentityProbe,
 ): void {
 	if (!file || !id || !sessionFile) return;
 	try {
@@ -198,7 +200,7 @@ export function recordProcessIdentity(
 			version: 1,
 			id,
 			sessionFile,
-			...readOwnProcessIdentity(),
+			...readOwnProcessIdentity(probe),
 		});
 	} catch {
 		// Unrecorded identity leaves a worktree cancel unconfirmed, never guessed.

@@ -148,8 +148,8 @@
 			"blob": "3b1058a3120ed01c98681e1c316d02dc078d1402",
 			"archive": "provenance/upstream/maestro/adapters/pi/child/protocol.ts",
 			"owned_change": {
-				"reason": "weihung fork: child asks the pi-herdr-agents:exit-hold event-bus channel before it auto-exits or reports a persistent task done (pi-herdr-agents fork 74f9983)",
-				"blob": "dabceaa7576034a5baa46832f80fc908d7ed625a"
+				"reason": "weihung fork: child asks the pi-herdr-agents:exit-hold event-bus channel before it auto-exits or reports a persistent task done (pi-herdr-agents fork 74f9983) | weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0)",
+				"blob": "63bd3d0c1cc42c5c60b4394b022d4415f068d283"
 			}
 		},
 		{
@@ -171,7 +171,11 @@
 			"source": "maestro/adapters/pi/launch-operations.ts",
 			"destination": "maestro/adapters/pi/launch-operations.ts",
 			"blob": "36ee2536a0a37fa1a839f669e588849e4d821b26",
-			"archive": "provenance/upstream/maestro/adapters/pi/launch-operations.ts"
+			"archive": "provenance/upstream/maestro/adapters/pi/launch-operations.ts",
+			"owned_change": {
+				"reason": "weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0)",
+				"blob": "c798c96a5fbbb0e97b35abc2df4cf7b110c56af2"
+			}
 		},
 		{
 			"kind": "copy",
@@ -187,8 +191,8 @@
 			"blob": "16c33eddff2f333e3dfa99031240b105078a6ac1",
 			"archive": "provenance/upstream/maestro/adapters/pi/launch.ts",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115)",
-				"blob": "e020225338706f48cac5e421a6ff479c7bef3898"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0)",
+				"blob": "afe0bed15c77bc0bfb70e6bc9aea9ee6148ba22d"
 			}
 		},
 		{
@@ -210,8 +214,8 @@
 			"blob": "b329ef6e037d3f9874d1999a616b451fbb210633",
 			"archive": "provenance/upstream/maestro/adapters/pi/pi-harness-adapter.ts",
 			"owned_change": {
-				"reason": "#149: a non-zero exit with no errorMessage and no session messages reads the terminal tail into exitOutput, the read bounded by EXIT_OUTPUT_READ_TIMEOUT_MS. | weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115)",
-				"blob": "cbdd6d4f1ae088b27258bab8a0cb4ab60beaf3a7"
+				"reason": "#149: a non-zero exit with no errorMessage and no session messages reads the terminal tail into exitOutput, the read bounded by EXIT_OUTPUT_READ_TIMEOUT_MS. | weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0)",
+				"blob": "682a601e5831af78005c19318caca394614cffba"
 			}
 		},
 		{
@@ -219,7 +223,11 @@
 			"source": "maestro/adapters/pi/process-identity.ts",
 			"destination": "maestro/adapters/pi/process-identity.ts",
 			"blob": "5704a0f66be6d43d8d82a7b657f37ab1064ff3c8",
-			"archive": "provenance/upstream/maestro/adapters/pi/process-identity.ts"
+			"archive": "provenance/upstream/maestro/adapters/pi/process-identity.ts",
+			"owned_change": {
+				"reason": "weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0)",
+				"blob": "7eaae180e29d703d4414abfa892de3c917b12246"
+			}
 		},
 		{
 			"kind": "copy",

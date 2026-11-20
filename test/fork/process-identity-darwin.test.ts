@@ -1,0 +1,504 @@
+// weihung fork: macOS process-identity cases (pi-herdr-agents fork 8921a55,
+// ec9d0d0) with the helpers they need from the fork's process-identity.test.ts.
+import "../clean-host-env.ts";
+import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { once } from "node:events";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { describe, it, type TestContext } from "node:test";
+import { captureSurfacePiProcessIdentity } from "../../maestro/adapters/pi/launch-operations.ts";
+import {
+	createDarwinProcessProbe,
+	createHostProcessProbe,
+	hostProcessProbe,
+	judgeProcessIdentity,
+	linuxProcessProbe,
+	parseDarwinProcessStat,
+	readOwnProcessIdentity,
+	terminateProcessIdentity,
+	verifyProcessIdentityRecord,
+	writeProcessIdentityRecord,
+	type PiProcessIdentityRecord,
+	type ProcessIdentityProbe,
+	type ProcessRunner,
+	type ProcessStat,
+} from "../../maestro/adapters/pi/process-identity.ts";
+
+const linux = process.platform === "linux";
+const darwin = process.platform === "darwin";
+const HOST = { bootId: "boot-a", pidNamespace: "pid:[4026531836]" };
+const identity = { pid: 20, startTime: "5000", ...HOST };
+const record = (
+	overrides: Partial<PiProcessIdentityRecord> = {},
+): PiProcessIdentityRecord => ({
+	version: 1,
+	id: "run",
+	sessionFile: "/s.jsonl",
+	...identity,
+	...overrides,
+});
+
+type Entry = ProcessStat | Error | undefined;
+function fakeProbe(entries: Array<[number, Entry]>, terminate?: () => void) {
+	const table = new Map(entries);
+	const signals: number[] = [];
+	const probe: ProcessIdentityProbe = {
+		host: () => HOST,
+		stat(pid) {
+			const entry = table.get(pid);
+			if (entry instanceof Error) throw entry;
+			return entry;
+		},
+		terminate(pid) {
+			signals.push(pid);
+			terminate?.();
+		},
+	};
+	return { probe, signals };
+}
+const stat = (startTime = "5000", state = "S", ppid = 10): ProcessStat => ({
+	state,
+	ppid,
+	startTime,
+});
+const errno = (code: string) =>
+	Object.assign(new Error(`${code}: test`), { code });
+
+function withDir(run: (dir: string, t: TestContext) => Promise<void> | void) {
+	return async (t: TestContext) => {
+		const dir = mkdtempSync(join(tmpdir(), "pi-identity-test-"));
+		try {
+			await run(dir, t);
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	};
+}
+
+const ANCHORED_TEST_TIMEOUT_MS = 10_000;
+
+// Capture timers are unref'd so a background attempt cannot hold the process
+// open. These tests await that attempt directly, so they keep the loop alive
+// the way a parent session does. Capture deadlines stay the ones under test.
+// The anchor must never outlive the test: a capture that misses its deadline
+// has to fail the file, not hang it.
+function whileParentLoopAlive(
+	t: TestContext,
+	run: () => Promise<void>,
+): Promise<void> {
+	const anchor = setTimeout(() => {}, ANCHORED_TEST_TIMEOUT_MS);
+	const drop = () => clearTimeout(anchor);
+	t.signal.addEventListener("abort", drop, { once: true });
+	return run().finally(() => {
+		t.signal.removeEventListener("abort", drop);
+		drop();
+	});
+}
+
+// Runs one capture in a fresh process that holds nothing else open. The
+// process exits on its own only if every timer the capture leaves pending is
+// unref'd.
+// A real process records its identity through the child-extension hook, then
+// rewrites its title exactly as Pi's CLI setup does.
+const IDENTITY_CHILD = `
+const [extension, file, id, sessionFile] = process.argv.slice(1);
+const { recordProcessIdentity } = await import(extension);
+recordProcessIdentity(id, sessionFile, file);
+process.title = "pi";
+process.stdout.write("ready\\n");
+setInterval(() => {}, 1000);
+`;
+async function spawnRecorded(file: string, id: string, sessionFile: string) {
+	const child = spawn(
+		process.execPath,
+		[
+			"--experimental-strip-types",
+			"--no-warnings",
+			"--input-type=module",
+			"-e",
+			IDENTITY_CHILD,
+			"--",
+			new URL("../../maestro/adapters/pi/child/protocol.ts", import.meta.url)
+				.href,
+			file,
+			id,
+			sessionFile,
+		],
+		{ stdio: ["ignore", "pipe", "inherit"] },
+	);
+	let output = "";
+	for await (const chunk of child.stdout) {
+		output += String(chunk);
+		if (output.includes("ready\n")) return child;
+	}
+	throw new Error("identity child exited before it was ready");
+}
+const paneOf = (shellPid: number | undefined) => ({
+	getProcessInfo: () => ({ shellPid, pids: [], foregroundProcesses: [] }),
+});
+
+describe("process identity (weihung fork: macOS probe)", () => {
+	it(
+		"captures a real child's identity on macOS across its title rewrite, SIGSTOP, and exit",
+		withDir(async (dir) => {
+			if (!darwin) return;
+			const sessionFile = join(dir, "s.jsonl");
+			const file = `${sessionFile}.process.json`;
+			const child = await spawnRecorded(file, "real", sessionFile);
+			try {
+				const pid = child.pid!;
+				// The test process is the child's parent: the pane shell stand-in.
+				const captured = await captureSurfacePiProcessIdentity(
+					paneOf(process.pid),
+					"pane",
+					{ file, id: "real", sessionFile },
+					{ timeoutMs: 5_000, intervalMs: 20 },
+				);
+				assert.equal(captured.pid, pid);
+				assert.equal(
+					captured.startTime,
+					createDarwinProcessProbe().stat(pid)?.startTime,
+				);
+				assert.equal(captured.pidNamespace, "darwin:host");
+				assert.deepEqual(judgeProcessIdentity(captured), { kind: "alive" });
+				process.kill(pid, "SIGSTOP");
+				assert.deepEqual(judgeProcessIdentity(captured), { kind: "alive" });
+				process.kill(pid, "SIGCONT");
+				const exited = once(child, "exit");
+				assert.deepEqual(terminateProcessIdentity(captured), { kind: "alive" });
+				await exited;
+				assert.deepEqual(judgeProcessIdentity(captured), { kind: "exited" });
+			} finally {
+				child.kill("SIGKILL");
+			}
+		}),
+	);
+
+	it("parses ps output into a UTC start time and a single-letter state", () => {
+		// 2026-10-19T11:24:33Z
+		assert.deepEqual(
+			parseDarwinProcessStat("72407 Ss   Mon Oct 19 11:24:33 2026\n"),
+			{
+				state: "S",
+				ppid: 72407,
+				startTime: "1792409073",
+			},
+		);
+		// A single-digit day is space padded; `+` and `s` are modifiers.
+		assert.deepEqual(
+			parseDarwinProcessStat("  1 Z+ Sun Mar  1 00:00:05 2026"),
+			{
+				state: "Z",
+				ppid: 1,
+				startTime: String(Date.UTC(2026, 2, 1, 0, 0, 5) / 1000),
+			},
+		);
+		for (const text of [
+			"",
+			"72407 Ss",
+			"72407 Ss 一 10月/19 19:24:33 2026",
+			"72407 Ss Mon Oct 19 11:24:33 2026\n8 S Mon Oct 19 11:24:33 2026",
+			"72407 Ss Mon Xyz 19 11:24:33 2026",
+		])
+			assert.throws(() => parseDarwinProcessStat(text), /unparseable ps/, text);
+	});
+
+	describe("macOS probe", () => {
+		const ok = (stdout: string): ReturnType<ProcessRunner> => ({
+			status: 0,
+			stdout,
+			stderr: "",
+		});
+		function runner(
+			respond: (file: string, args: string[]) => ReturnType<ProcessRunner>,
+		) {
+			const calls: Array<[string, string[]]> = [];
+			const run: ProcessRunner = (file, args) => {
+				calls.push([file, args]);
+				return respond(file, args);
+			};
+			return { run, calls };
+		}
+		it("reads the boot session once and the process table row by row", () => {
+			const { run, calls } = runner((file) =>
+				file.endsWith("sysctl")
+					? ok("621726D6-2083-49C7-8542-EDEE2A5E693A\n")
+					: ok("72406 S   Mon Oct 19 11:24:33 2026\n"),
+			);
+			const probe = createDarwinProcessProbe({ run, platform: "darwin" });
+			const host = {
+				bootId: "621726D6-2083-49C7-8542-EDEE2A5E693A",
+				pidNamespace: "darwin:host",
+			};
+			assert.deepEqual(probe.host(), host);
+			assert.deepEqual(probe.host(), host);
+			assert.deepEqual(probe.stat(72407), {
+				state: "S",
+				ppid: 72406,
+				startTime: "1792409073",
+			});
+			assert.deepEqual(calls, [
+				["/usr/sbin/sysctl", ["-n", "kern.bootsessionuuid"]],
+				["/bin/ps", ["-o", "ppid=,state=,lstart=", "-p", "72407"]],
+			]);
+		});
+		it("treats only ps's empty exit 1 as an absent PID; every other failure throws", () => {
+			const stat = (result: ReturnType<ProcessRunner>) =>
+				createDarwinProcessProbe({
+					run: () => result,
+					platform: "darwin",
+				}).stat(20);
+			assert.equal(stat({ status: 1, stdout: "", stderr: "" }), undefined);
+			assert.throws(
+				() => stat({ status: 1, stdout: "", stderr: "ps: illegal option" }),
+				/illegal option/,
+			);
+			assert.throws(
+				() => stat({ status: 2, stdout: "", stderr: "" }),
+				/exited 2/,
+			);
+			assert.throws(
+				() =>
+					stat({
+						status: null,
+						stdout: "",
+						stderr: "",
+						error: errno("ETIMEDOUT"),
+					}),
+				/ETIMEDOUT/,
+			);
+			assert.throws(() => stat(ok("garbage")), /unparseable ps/);
+		});
+		it("an unreadable boot session or another platform is no host", () => {
+			const failing = createDarwinProcessProbe({
+				run: () => ({ status: 1, stdout: "", stderr: "sysctl: unknown oid" }),
+				platform: "darwin",
+			});
+			assert.throws(() => failing.host(), /unknown oid/);
+			const elsewhere = createDarwinProcessProbe({
+				run: () => ok("x"),
+				platform: "win32",
+			});
+			assert.throws(() => elsewhere.host(), /unsupported on win32/);
+		});
+		it("verifies a child's record through its ps ancestry like any other host", () => {
+			const table = new Map<number, string>([
+				[20, "10 S Mon Oct 19 11:24:33 2026"],
+				[10, "1 Ss Mon Oct 19 11:00:00 2026"],
+			]);
+			const run: ProcessRunner = (file, args) => {
+				if (file.endsWith("sysctl")) return ok("boot-a");
+				const row = table.get(Number(args.at(-1)));
+				return row ? ok(row) : { status: 1, stdout: "", stderr: "" };
+			};
+			const probe = createDarwinProcessProbe({ run, platform: "darwin" });
+			const host = probe.host();
+			const recorded = {
+				pid: 20,
+				startTime: String(Date.UTC(2026, 9, 19, 11, 24, 33) / 1000),
+				...host,
+			};
+			assert.deepEqual(
+				verifyProcessIdentityRecord(
+					{ version: 1, id: "run", sessionFile: "/s.jsonl", ...recorded },
+					{ id: "run", sessionFile: "/s.jsonl", shellPid: 10 },
+					probe,
+				),
+				recorded,
+			);
+			assert.throws(
+				() =>
+					verifyProcessIdentityRecord(
+						{ version: 1, id: "run", sessionFile: "/s.jsonl", ...recorded },
+						{ id: "run", sessionFile: "/s.jsonl", shellPid: 99 },
+						probe,
+					),
+				/not the Herdr pane shell 99/,
+			);
+			table.delete(20);
+			assert.deepEqual(judgeProcessIdentity(recorded, probe), {
+				kind: "exited",
+			});
+			table.set(20, "10 S Mon Oct 19 11:24:34 2026");
+			assert.equal(judgeProcessIdentity(recorded, probe).kind, "unknown");
+			table.set(20, "10 Z Mon Oct 19 11:24:33 2026");
+			assert.deepEqual(judgeProcessIdentity(recorded, probe), {
+				kind: "exited",
+			});
+		});
+		it("reads ps under the C locale and UTC so every process agrees on one string", {
+			skip: !darwin,
+		}, () => {
+			const probe = createDarwinProcessProbe();
+			const self = probe.stat(process.pid);
+			assert.ok(self);
+			assert.match(self.startTime, /^\d{10}$/);
+			// Process start is in the past and within the clock's reach.
+			assert.ok(Number(self.startTime) <= Date.now() / 1000 + 1);
+			assert.ok(
+				Number(self.startTime) > Date.now() / 1000 - 60 * 60 * 24 * 365,
+			);
+			// macOS PIDs stop at 99999; find an unused one inside that range.
+			let free = 99_999;
+			while (free > 90_000) {
+				try {
+					process.kill(free, 0);
+					free--;
+				} catch {
+					break;
+				}
+			}
+			assert.equal(probe.stat(free), undefined);
+		});
+	});
+
+	it(
+		"a macOS child records through ps and the parent captures it long after launch",
+		{ timeout: ANCHORED_TEST_TIMEOUT_MS },
+		withDir((dir, t) =>
+			whileParentLoopAlive(t, async () => {
+				const sessionFile = join(dir, "s.jsonl");
+				const file = `${sessionFile}.process.json`;
+				const rows = new Map<number, string>([
+					[process.pid, "10 S Mon Oct 19 11:24:33 2026"],
+					[10, "1 Ss Mon Oct 19 11:00:00 2026"],
+				]);
+				const run: ProcessRunner = (tool, args) => {
+					if (tool.endsWith("sysctl"))
+						return { status: 0, stdout: "boot-a\n", stderr: "" };
+					const row = rows.get(Number(args.at(-1)));
+					return row
+						? { status: 0, stdout: `${row}\n`, stderr: "" }
+						: { status: 1, stdout: "", stderr: "" };
+				};
+				const probe = createDarwinProcessProbe({ run, platform: "darwin" });
+				const expected = { file, id: "run", sessionFile };
+				// The first capture window closes before a slow-loading Pi has recorded.
+				await assert.rejects(
+					captureSurfacePiProcessIdentity(paneOf(10), "pane", expected, {
+						timeoutMs: 40,
+						intervalMs: 10,
+						probe,
+					}),
+					/not captured within 40ms: the child has not recorded/,
+				);
+				// Minutes later the child's hook publishes; a fresh capture verifies it.
+				const { recordProcessIdentity } = await import(
+					"../../maestro/adapters/pi/child/protocol.ts"
+				);
+				recordProcessIdentity("run", sessionFile, file, probe);
+				assert.deepEqual(
+					await captureSurfacePiProcessIdentity(paneOf(10), "pane", expected, {
+						timeoutMs: 1_000,
+						intervalMs: 10,
+						probe,
+					}),
+					{
+						pid: process.pid,
+						startTime: String(Date.UTC(2026, 9, 19, 11, 24, 33) / 1000),
+						bootId: "boot-a",
+						pidNamespace: "darwin:host",
+					},
+				);
+			}),
+		),
+	);
+
+	it("selects the probe of the running platform", () => {
+		if (darwin) {
+			assert.equal(
+				createHostProcessProbe("darwin").host().pidNamespace,
+				"darwin:host",
+			);
+			const own = readOwnProcessIdentity();
+			assert.equal(own.pid, process.pid);
+			assert.equal(own.pidNamespace, "darwin:host");
+			assert.deepEqual(judgeProcessIdentity(own), { kind: "alive" });
+			assert.equal(hostProcessProbe.host().bootId, own.bootId);
+		}
+		if (linux) {
+			assert.match(
+				createHostProcessProbe("linux").host().pidNamespace,
+				/^pid:/,
+			);
+			assert.equal(hostProcessProbe, linuxProcessProbe);
+		}
+		// Any other host has no probe: the Linux reader refuses it by name.
+		if (!darwin && !linux)
+			assert.throws(() => hostProcessProbe.host(), /unsupported on/);
+	});
+
+	it(
+		"retries a transient host failure within the capture window",
+		{ timeout: ANCHORED_TEST_TIMEOUT_MS },
+		withDir((dir, t) =>
+			whileParentLoopAlive(t, async () => {
+				const file = join(dir, "s.jsonl.process.json");
+				writeProcessIdentityRecord(file, record());
+				const { probe } = fakeProbe([
+					[20, stat()],
+					[10, stat("1", "S", 1)],
+				]);
+				let failures = 2;
+				const flaky: ProcessIdentityProbe = {
+					...probe,
+					host() {
+						if (failures-- > 0) throw new Error("sysctl exited 1: busy");
+						return probe.host();
+					},
+				};
+				const captured = await captureSurfacePiProcessIdentity(
+					paneOf(10),
+					"pane",
+					{ file, id: "run", sessionFile: "/s.jsonl" },
+					{ timeoutMs: 5_000, intervalMs: 10, probe: flaky },
+				);
+				assert.deepEqual(captured, identity);
+				assert.equal(failures, -1, "the host was read again after failing");
+				// A host that never recovers reports its last reason at the deadline.
+				const broken: ProcessIdentityProbe = {
+					...probe,
+					host() {
+						throw new Error("sysctl exited 1: busy");
+					},
+				};
+				await assert.rejects(
+					captureSurfacePiProcessIdentity(
+						paneOf(10),
+						"pane",
+						{ file, id: "run", sessionFile: "/s.jsonl" },
+						{ timeoutMs: 60, intervalMs: 10, probe: broken },
+					),
+					/not captured within 60ms: .*sysctl exited 1: busy/,
+				);
+			}),
+		),
+	);
+
+	it(
+		"fails at once, naming the reason, on a host that cannot name processes",
+		withDir(async (dir) => {
+			const file = join(dir, "s.jsonl.process.json");
+			writeProcessIdentityRecord(file, record());
+			const started = Date.now();
+			await assert.rejects(
+				captureSurfacePiProcessIdentity(
+					paneOf(10),
+					"pane",
+					{ file, id: "run", sessionFile: "/s.jsonl" },
+					{
+						timeoutMs: 60_000,
+						probe: createDarwinProcessProbe({
+							run: () => ({ status: 0, stdout: "x", stderr: "" }),
+							platform: "win32",
+						}),
+					},
+				),
+				/Process identity not captured: process identity is unsupported on win32/,
+			);
+			assert.ok(Date.now() - started < 5_000, "no deadline was waited out");
+		}),
+	);
+});

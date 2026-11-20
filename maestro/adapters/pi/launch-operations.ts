@@ -9,7 +9,8 @@ import type {
 import type { WorktreeOperations } from "../../core/worktree.ts";
 import { Deadline } from "../../core/deadline.ts";
 import {
-	linuxProcessProbe,
+	hostProcessProbe,
+	UnsupportedProcessPlatformError,
 	readLinuxProcessEnvironment,
 	readProcessIdentityRecord,
 	verifyProcessIdentityRecord,
@@ -269,8 +270,19 @@ export async function captureSurfacePiProcessIdentity(
 ): Promise<PiProcessIdentity> {
 	const timeoutMs = options.timeoutMs ?? 15_000;
 	const intervalMs = options.intervalMs ?? 100;
-	const deadline = Date.now() + timeoutMs;
+	const probe = options.probe ?? hostProcessProbe;
 	let lastError = "the child has not recorded its process identity";
+	// A host with no probe can never verify a record, and its child cannot have
+	// recorded one: report that now instead of waiting out a deadline. Any other
+	// host failure may be transient, so it is retried within the window.
+	try {
+		probe.host();
+	} catch (error) {
+		if (error instanceof UnsupportedProcessPlatformError)
+			throw new Error(`Process identity not captured: ${errorMessage(error)}`);
+		lastError = errorMessage(error);
+	}
+	const deadline = Date.now() + timeoutMs;
 	let answered = false;
 	for (;;) {
 		if (Date.now() >= deadline) break;
@@ -299,7 +311,7 @@ export async function captureSurfacePiProcessIdentity(
 				return verifyProcessIdentityRecord(
 					record,
 					{ ...expected, shellPid: info.shellPid },
-					options.probe ?? linuxProcessProbe,
+					probe,
 				);
 			}
 		} catch (error) {
