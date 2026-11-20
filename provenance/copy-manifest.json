@@ -182,7 +182,11 @@
 			"source": "maestro/adapters/pi/launch-resume.ts",
 			"destination": "maestro/adapters/pi/launch-resume.ts",
 			"blob": "f282c8e8552990f1abaae8b8364f3a5ea491d0a2",
-			"archive": "provenance/upstream/maestro/adapters/pi/launch-resume.ts"
+			"archive": "provenance/upstream/maestro/adapters/pi/launch-resume.ts",
+			"owned_change": {
+				"reason": "weihung fork: resume passes the launch's saved system prompt (append or replace) again (pi-herdr-agents fork 798f07a)",
+				"blob": "5f0e70573d0630debb77597ecc0c72008491dace"
+			}
 		},
 		{
 			"kind": "copy",
@@ -191,8 +195,8 @@
 			"blob": "16c33eddff2f333e3dfa99031240b105078a6ac1",
 			"archive": "provenance/upstream/maestro/adapters/pi/launch.ts",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0) | weihung fork: seed installed project packages (.pi/npm, .pi/git) into new managed worktrees (pi-herdr-agents fork f16666b)",
-				"blob": "cc6b9844e5fc5a24fce7319e300f87c7581f1b64"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0) | weihung fork: seed installed project packages (.pi/npm, .pi/git) into new managed worktrees (pi-herdr-agents fork f16666b) | weihung fork: resume passes the launch's saved system prompt (append or replace) again (pi-herdr-agents fork 798f07a)",
+				"blob": "67e8499e2897447c6235bc2dfaa92bdd6fd89890"
 			}
 		},
 		{
@@ -248,7 +252,11 @@
 			"source": "maestro/adapters/pi/session.ts",
 			"destination": "maestro/adapters/pi/session.ts",
 			"blob": "1c2ae82a6f41f2fd03afbe08603d99c15310c49c",
-			"archive": "provenance/upstream/maestro/adapters/pi/session.ts"
+			"archive": "provenance/upstream/maestro/adapters/pi/session.ts",
+			"owned_change": {
+				"reason": "weihung fork: resume passes the launch's saved system prompt (append or replace) again (pi-herdr-agents fork 798f07a)",
+				"blob": "fe5e1788e7b7becd759a2d92de99d2bd69a4d4a7"
+			}
 		},
 		{
 			"kind": "copy",
