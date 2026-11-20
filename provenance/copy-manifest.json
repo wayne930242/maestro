@@ -605,8 +605,8 @@
 			"archive": "provenance/upstream/maestro/runtime/pi-run-session.ts",
 			"classification": "split",
 			"owned_change": {
-				"reason": "#149: the host summary of such an exit appends the relayed exitOutput. | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0)",
-				"blob": "b3c37f750cd89c2dabee4e0ef5a5fe1d9e234573"
+				"reason": "#149: the host summary of such an exit appends the relayed exitOutput. | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0) | weihung fork: launch under a kernel adopted across reload that passes no cancel signal (pi-herdr-agents fork 6f530b9)",
+				"blob": "93f89d6e14ebd6331a15ee091572f96bd70e39a8"
 			}
 		},
 		{

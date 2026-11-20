@@ -1154,7 +1154,8 @@
 		"test/fork/process-identity-darwin.test.ts",
 		"test/fork/process-identity-adapter.test.ts",
 		"test/fork/run-session-cancel.test.ts",
-		"test/fork/confirm-terminated.test.ts"
+		"test/fork/confirm-terminated.test.ts",
+		"test/fork/reload-legacy-kernel.test.ts"
 	],
 	"identity_ledger": "baseline/test-identities.json.gz",
 	"identity_capture": "evidence/baseline-final/baseline.jsonl",
