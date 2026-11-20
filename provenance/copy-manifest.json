@@ -195,8 +195,8 @@
 			"blob": "16c33eddff2f333e3dfa99031240b105078a6ac1",
 			"archive": "provenance/upstream/maestro/adapters/pi/launch.ts",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0) | weihung fork: seed installed project packages (.pi/npm, .pi/git) into new managed worktrees (pi-herdr-agents fork f16666b) | weihung fork: resume passes the launch's saved system prompt (append or replace) again (pi-herdr-agents fork 798f07a)",
-				"blob": "67e8499e2897447c6235bc2dfaa92bdd6fd89890"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0) | weihung fork: seed installed project packages (.pi/npm, .pi/git) into new managed worktrees (pi-herdr-agents fork f16666b) | weihung fork: resume passes the launch's saved system prompt (append or replace) again (pi-herdr-agents fork 798f07a) | Seed in the actual child cwd and preserve a tracked package .gitignore.",
+				"blob": "34544167f14d31dea06a91257d28a56d5bb5c36b"
 			}
 		},
 		{
@@ -653,8 +653,8 @@
 			"blob": "6477c19e280632a21fa8fa2811f2fb25babf1b3c",
 			"archive": "provenance/upstream/maestro/runtime/worktree-operations.ts",
 			"owned_change": {
-				"reason": "weihung fork: seed installed project packages (.pi/npm, .pi/git) into new managed worktrees (pi-herdr-agents fork f16666b)",
-				"blob": "1906530b545b5d102d868bc2fe3d1cf97f982d35"
+				"reason": "weihung fork: seed installed project packages (.pi/npm, .pi/git) into new managed worktrees (pi-herdr-agents fork f16666b) | Seed in the actual child cwd and preserve a tracked package .gitignore.",
+				"blob": "1028ce638751ef8a9e1601c459c1c26eecc9862f"
 			}
 		},
 		{

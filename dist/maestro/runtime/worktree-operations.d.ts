@@ -13,10 +13,11 @@ export declare const PROJECT_PACKAGE_SEED_TIMEOUT_MS = 60000;
  * Seeds a new managed worktree with the source checkout's installed project
  * packages (`.pi/npm`, `.pi/git`), which are gitignored and so never reach the
  * worktree. Without them the child's Pi installs them at startup, which can
- * outlast launch readiness. Directories are matched by the launch cwd's path
- * inside its repository. Returns warnings; it never throws.
+ * outlast launch readiness. Pi reads project packages relative to its own
+ * cwd (the worktree root), even when the source project was a subdirectory.
+ * Returns warnings; it never throws.
  */
-export declare function seedProjectPackages(sourceCwd: string, worktreePath: string): Promise<string[]>;
+export declare function seedProjectPackages(sourceCwd: string, targetCwd: string): Promise<string[]>;
 export declare function resolveWorktreeProvisionCwd(sourceCwd: string): Promise<string>;
 export declare function readWorktreeManifest(path: string): JsonObject | undefined;
 export declare function writeWorktreeManifest(path: string, value: JsonObject): void;

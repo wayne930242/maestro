@@ -322,8 +322,9 @@ async function prepareLaunchSurface(resolved, operations) {
     };
     if (created.diagnostics?.length)
         worktree.diagnostics = created.diagnostics;
+    const targetCwd = created.path;
     try {
-        const seedWarnings = await worktreeOps.seedProjectPackages(resolved.sourceCwd, created.path);
+        const seedWarnings = await worktreeOps.seedProjectPackages(resolved.sourceCwd, targetCwd);
         if (seedWarnings.length)
             (worktree.diagnostics ??= []).push(...seedWarnings);
     }
@@ -345,7 +346,7 @@ async function prepareLaunchSurface(resolved, operations) {
     const hasIsolatedAgentDir = existsSync(isolatedAgentDir);
     return {
         surface: created.paneId,
-        targetCwd: created.path,
+        targetCwd,
         effectiveAgentDir: hasIsolatedAgentDir
             ? isolatedAgentDir
             : resolved.agentDir,

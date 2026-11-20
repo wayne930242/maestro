@@ -1,5 +1,3 @@
-// weihung fork: project-package seeding wired through the adapter and the Pi
-// run session (pi-herdr-agents fork f16666b).
 import "../clean-host-env.ts";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -36,9 +34,9 @@ function initializeWorktreeFixture(dir: string) {
 	return git;
 }
 
-describe("PiHarnessAdapter (weihung fork: project packages)", () => {
+describe("PiHarnessAdapter project packages", () => {
 	it(
-		"seeds a worktree launch's project packages from the launch cwd's relative path",
+		"seeds a subdirectory project's packages where the launched child reads them",
 		{
 			skip: worktreesUnsupportedOnWindows,
 		},
@@ -104,23 +102,17 @@ describe("PiHarnessAdapter (weihung fork: project packages)", () => {
 							thinking: "off",
 						},
 					});
-				const seeded = await adapterWith(createWorktreeOperations()).spawn({
+				const adapter = adapterWith(createWorktreeOperations());
+				const seeded = await adapter.spawn({
 					...f.options,
 					cwd: app,
 					worktreeRequest: { branch: "seeded" },
 				});
+				const childCwd = seeded.worktree!.path;
+				assert.equal(adapter.getRunningChild(seeded).cwd, childCwd);
 				assert.ok(
 					existsSync(
-						join(
-							seeded.worktree!.path,
-							"apps",
-							"web",
-							".pi",
-							"npm",
-							"node_modules",
-							"pi-code",
-							"index.js",
-						),
+						join(childCwd, ".pi", "npm", "node_modules", "pi-code", "index.js"),
 					),
 				);
 			}),
