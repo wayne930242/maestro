@@ -1149,7 +1149,8 @@
 		"test/maestro/exit-output.test.ts",
 		"test/fork/solution-space.test.ts",
 		"test/fork/routing-guidelines.test.ts",
-		"test/fork/complex-coding.test.ts"
+		"test/fork/complex-coding.test.ts",
+		"test/fork/exit-hold.test.ts"
 	],
 	"identity_ledger": "baseline/test-identities.json.gz",
 	"identity_capture": "evidence/baseline-final/baseline.jsonl",

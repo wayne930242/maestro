@@ -146,7 +146,11 @@
 			"source": "maestro/adapters/pi/child/protocol.ts",
 			"destination": "maestro/adapters/pi/child/protocol.ts",
 			"blob": "3b1058a3120ed01c98681e1c316d02dc078d1402",
-			"archive": "provenance/upstream/maestro/adapters/pi/child/protocol.ts"
+			"archive": "provenance/upstream/maestro/adapters/pi/child/protocol.ts",
+			"owned_change": {
+				"reason": "weihung fork: child asks the pi-herdr-agents:exit-hold event-bus channel before it auto-exits or reports a persistent task done (pi-herdr-agents fork 74f9983)",
+				"blob": "dabceaa7576034a5baa46832f80fc908d7ed625a"
+			}
 		},
 		{
 			"kind": "copy",
