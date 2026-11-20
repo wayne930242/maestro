@@ -501,6 +501,7 @@
 		"test": "node --experimental-strip-types scripts/test-unit.ts",
 		"test:fidelity": "node --experimental-strip-types --test test/copy-fidelity.test.ts test/test-migration.test.ts",
 		"build": "node --experimental-strip-types scripts/build.ts",
+		"prepare": "npm run build",
 		"prepack": "npm run build",
 		"test:package": "node --experimental-strip-types scripts/test-package.ts",
 		"test:coverage": "node --experimental-strip-types scripts/test-unit.ts --coverage",
