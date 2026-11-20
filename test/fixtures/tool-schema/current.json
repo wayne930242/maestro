@@ -271,7 +271,7 @@
 		{
 			"name": "subagents_write_task_models",
 			"scopes": ["parent"],
-			"description": "Validate task preferences, show exact before/after for user approval, then atomically replace models.tasks, models.tasksThinking and models.tasksMeta in the durable Pi agent config, preserving unrelated settings. Every call shows exact before/after for changed categories and requires user approval through a refusal-first selector (60-second timeout), even when another extension already approved it. No-UI, print/JSON and child sessions are refused without writing. Supported categories: coding, review, recon, qa, architecture, docs. Partial nonempty categories are accepted; omitted categories are removed. Rejects duplicate exact refs within a category. Review the active authenticated registry and existing preferences first. Optional expectedConfigRevision also binds the proposal's starting revision: it fails without replacing configuration when the config file no longer matches the revision the proposal was read from. Optional basis records what the ranking rests on; its kind must equal tasksMeta.method, and it is returned but not saved. Concurrent approvals refuse immediately rather than stack. The full replacement bytes and real directory are prepared before approval and rechecked before rename. New files disclose their minimal status/models seed. Cooperating writes use an advisory lock, not a filesystem authorization boundary. Returns normalized saved preferences, missing categories, the configRevision of the written file, and any basis; reload required.",
+			"description": "Validate task preferences, show exact before/after for user approval, then atomically replace models.tasks, models.tasksThinking and models.tasksMeta in the durable Pi agent config, preserving unrelated settings. Every call shows exact before/after for changed categories and requires user approval through a refusal-first selector (60-second timeout), even when another extension already approved it. No-UI, print/JSON and child sessions are refused without writing. Supported categories: coding, complex-coding, review, recon, qa, architecture, docs. Partial nonempty categories are accepted; omitted categories are removed. Rejects duplicate exact refs within a category. Review the active authenticated registry and existing preferences first. Optional expectedConfigRevision also binds the proposal's starting revision: it fails without replacing configuration when the config file no longer matches the revision the proposal was read from. Optional basis records what the ranking rests on; its kind must equal tasksMeta.method, and it is returned but not saved. Concurrent approvals refuse immediately rather than stack. The full replacement bytes and real directory are prepared before approval and rechecked before rename. New files disclose their minimal status/models seed. Cooperating writes use an advisory lock, not a filesystem authorization boundary. Returns normalized saved preferences, missing categories, the configRevision of the written file, and any basis; reload required.",
 			"parameters": {
 				"type": "object",
 				"required": ["tasks", "tasksMeta"],
@@ -284,6 +284,12 @@
 							"coding": {
 								"minItems": 1,
 								"description": "Implementation workers",
+								"type": "array",
+								"items": { "minLength": 1, "type": "string" }
+							},
+							"complex-coding": {
+								"minItems": 1,
+								"description": "Complex or high-risk implementation workers",
 								"type": "array",
 								"items": { "minLength": 1, "type": "string" }
 							},
@@ -327,6 +333,17 @@
 								"type": "object",
 								"properties": {
 									"coding": {
+										"anyOf": [
+											{ "const": "off", "type": "string" },
+											{ "const": "minimal", "type": "string" },
+											{ "const": "low", "type": "string" },
+											{ "const": "medium", "type": "string" },
+											{ "const": "high", "type": "string" },
+											{ "const": "xhigh", "type": "string" },
+											{ "const": "max", "type": "string" }
+										]
+									},
+									"complex-coding": {
 										"anyOf": [
 											{ "const": "off", "type": "string" },
 											{ "const": "minimal", "type": "string" },

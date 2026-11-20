@@ -149,7 +149,7 @@ describe("task-model init composition", () => {
 		// Recaptured when basis guidance distinguished the compact dialog from the tool result.
 		assert.equal(
 			createHash("sha256").update(prompt).digest("hex"),
-			"ee1c2798118b09883d54d156a73eb21b9fd286de85c42b4ddaef5008c35bbd1e",
+			"1644f9ac37d671cccbfc5e958dfffd8e5d073f1bd28439048f58434d694f8c6b",
 		);
 		const unknown = initHost(() => ({
 			projectActiveRegistry: (project) =>

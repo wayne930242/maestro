@@ -1,0 +1,32 @@
+[
+	{
+		"destination": "test/core-monolith.test.ts",
+		"title": "returns normalized saved preferences and missing categories after atomic replacement",
+		"reason": "weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514)"
+	},
+	{
+		"destination": "test/core-monolith.test.ts",
+		"title": "rejects invalid model configuration",
+		"reason": "weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514)"
+	},
+	{
+		"destination": "test/maestro/task-model-approval.test.ts",
+		"title": "shows only changed categories, exact ordered models and thinking, and waits for approval",
+		"reason": "weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514)"
+	},
+	{
+		"destination": "test/maestro/task-model-init-pi.test.ts",
+		"title": "composes the complete active projection and preserves the exact accepted prompt",
+		"reason": "weihung fork: complex-coding task category changes the init prompt hash (pi-herdr-agents fork 9e5b514)"
+	},
+	{
+		"destination": "test/tools-monolith.test.ts",
+		"title": "injects every live available model with sanitized facts, preferences, and category definitions",
+		"reason": "weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514)"
+	},
+	{
+		"destination": "test/tools-monolith.test.ts",
+		"title": "returns saved tool details and text from normalized config while preserving unrelated preferences",
+		"reason": "weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514)"
+	}
+]

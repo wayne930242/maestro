@@ -2,6 +2,7 @@ import type { ThinkingLevel } from "../types.ts";
 
 export const TASK_CATEGORIES = [
 	"coding",
+	"complex-coding",
 	"review",
 	"recon",
 	"qa",
@@ -11,6 +12,7 @@ export const TASK_CATEGORIES = [
 export type TaskCategory = (typeof TASK_CATEGORIES)[number];
 export const TASK_CATEGORY_DESCRIPTIONS = {
 	coding: "Implementation workers",
+	"complex-coding": "Complex or high-risk implementation workers",
 	review: "Code reviewers",
 	recon: "Reconnaissance scouts",
 	qa: "Software and test runners",

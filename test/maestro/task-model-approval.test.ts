@@ -197,9 +197,15 @@ describe("task-model writer approval", () => {
 				assert.ok(
 					dialog.title.includes('review: ["p/old"] / "high" -> null / null'),
 				);
-				for (const category of ["recon", "qa", "architecture", "docs"])
+				for (const category of [
+					"complex-coding",
+					"recon",
+					"qa",
+					"architecture",
+					"docs",
+				])
 					assert.ok(!dialog.title.includes(`${category}:`));
-				assert.ok(dialog.title.includes("4 categories unchanged."));
+				assert.ok(dialog.title.includes("5 categories unchanged."));
 				assert.ok(
 					dialog.title.includes(
 						`Metadata: ${JSON.stringify(before.models.tasksMeta)} -> ${JSON.stringify(tasksMeta)}`,

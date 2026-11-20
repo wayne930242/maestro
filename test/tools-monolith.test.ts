@@ -5228,6 +5228,7 @@ describe("commands", () => {
 			);
 			assert.deepEqual(brief.categories, {
 				coding: "Implementation workers",
+				"complex-coding": "Complex or high-risk implementation workers",
 				review: "Code reviewers",
 				recon: "Reconnaissance scouts",
 				qa: "Software and test runners",
@@ -5803,7 +5804,15 @@ describe("commands", () => {
 			)!;
 			assert.deepEqual(
 				Object.keys(writer.parameters.properties.tasks.properties),
-				["coding", "review", "recon", "qa", "architecture", "docs"],
+				[
+					"coding",
+					"complex-coding",
+					"review",
+					"recon",
+					"qa",
+					"architecture",
+					"docs",
+				],
 			);
 			assert.equal(
 				writer.parameters.properties.tasks.additionalProperties,
@@ -5841,7 +5850,14 @@ describe("commands", () => {
 				tasks: { coding: ["fake/worker"] },
 				tasksThinking: { coding: "high" },
 				tasksMeta,
-				missingCategories: ["review", "recon", "qa", "architecture", "docs"],
+				missingCategories: [
+					"complex-coding",
+					"review",
+					"recon",
+					"qa",
+					"architecture",
+					"docs",
+				],
 				configRevision: readConfigRevision(configPath),
 			});
 			assert.match(result.content[0].text, /Reload required/);

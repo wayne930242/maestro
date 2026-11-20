@@ -311,6 +311,17 @@ export function checkAdaptedHelper(
 		);
 }
 
+/**
+ * weihung fork: a migrated case whose body the fork changed on purpose. Its
+ * title and identity stay; only the body-equality check is waived, and a
+ * record whose case is still unchanged (or no longer found) fails as stale.
+ */
+interface ForkTestChange {
+	destination: string;
+	title: string;
+	reason: string;
+}
+
 export function checkTestMigration(root: string): TestMigrationMap {
 	let tree: { copy_sha: string; files: { path: string; blob: string }[] };
 	try {
@@ -334,6 +345,11 @@ export function checkTestMigration(root: string): TestMigrationMap {
 		}
 		for (const helper of adapted) checkAdaptedHelper(root, helper, tree);
 	}
+	const forkPath = resolve(root, "provenance/fork-test-changes.json");
+	const forkChanges: ForkTestChange[] = existsSync(forkPath)
+		? JSON.parse(readFileSync(forkPath, "utf8"))
+		: [];
+	const usedForkChanges = new Set<ForkTestChange>();
 	const destinations = new Set<string>();
 	for (const map of maps) {
 		assert.equal(map.copy_sha, tree.copy_sha);
@@ -343,9 +359,14 @@ export function checkTestMigration(root: string): TestMigrationMap {
 				`Duplicate migrated test destination: ${entry.destination}`,
 			);
 			destinations.add(entry.destination);
-			checkEntry(root, map, tree, entry);
+			checkEntry(root, map, tree, entry, forkChanges, usedForkChanges);
 		}
 	}
+	for (const change of forkChanges)
+		assert(
+			change.reason && usedForkChanges.has(change),
+			`Stale fork test change: ${change.destination} ${change.title}`,
+		);
 	return { copy_sha: tree.copy_sha, files: maps.flatMap((map) => map.files) };
 }
 
@@ -354,6 +375,8 @@ function checkEntry(
 	map: TestMigrationMap,
 	tree: { copy_sha: string; files: { path: string; blob: string }[] },
 	entry: TestMigration,
+	forkChanges: ForkTestChange[] = [],
+	usedForkChanges = new Set<ForkTestChange>(),
 ): void {
 	{
 		const bytes = readFileSync(resolve(root, entry.archive));
@@ -425,17 +448,24 @@ function checkEntry(
 					range.end > range.start &&
 					range.end <= original.length,
 			);
-			assert(
+			const slice = original.slice(range.start, range.end);
+			if (
 				statements.has(
-					tokens(
-						rewriteResourcePaths(
-							original.slice(range.start, range.end),
-							map.resource_mappings,
-						),
-					),
-				),
+					tokens(rewriteResourcePaths(slice, map.resource_mappings)),
+				)
+			)
+				continue;
+			const forkChange = forkChanges.find(
+				(change) =>
+					change.destination === entry.destination &&
+					caseHeader(slice).includes(change.title) &&
+					migrated.includes(change.title),
+			);
+			assert(
+				forkChange,
 				`Changed or missing test/helper body: ${entry.source}:${range.line ?? range.start} -> ${entry.destination}`,
 			);
+			usedForkChanges.add(forkChange);
 		}
 		if (entry.baseline_archive) {
 			const baselineBytes = readFileSync(resolve(root, entry.baseline_archive));

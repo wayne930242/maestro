@@ -635,6 +635,7 @@ Registered in: parent sessions.
 | --- | --- | --- | --- |
 | `tasks` | object | yes | — |
 | `tasks.coding` | string[] | no | Implementation workers |
+| `tasks.complex-coding` | string[] | no | Complex or high-risk implementation workers |
 | `tasks.review` | string[] | no | Code reviewers |
 | `tasks.recon` | string[] | no | Reconnaissance scouts |
 | `tasks.qa` | string[] | no | Software and test runners |
@@ -642,6 +643,7 @@ Registered in: parent sessions.
 | `tasks.docs` | string[] | no | Documentation workers |
 | `tasksThinking` | object \| null | no | — |
 | `tasksThinking.coding` | `"off"` \| `"minimal"` \| `"low"` \| `"medium"` \| `"high"` \| `"xhigh"` \| `"max"` | no | — |
+| `tasksThinking.complex-coding` | `"off"` \| `"minimal"` \| `"low"` \| `"medium"` \| `"high"` \| `"xhigh"` \| `"max"` | no | — |
 | `tasksThinking.review` | `"off"` \| `"minimal"` \| `"low"` \| `"medium"` \| `"high"` \| `"xhigh"` \| `"max"` | no | — |
 | `tasksThinking.recon` | `"off"` \| `"minimal"` \| `"low"` \| `"medium"` \| `"high"` \| `"xhigh"` \| `"max"` | no | — |
 | `tasksThinking.qa` | `"off"` \| `"minimal"` \| `"low"` \| `"medium"` \| `"high"` \| `"xhigh"` \| `"max"` | no | — |

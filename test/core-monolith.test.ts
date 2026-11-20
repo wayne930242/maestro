@@ -853,7 +853,14 @@ describe("model configuration", () => {
 				configPath,
 				tasks: { coding: ["fake/worker"] },
 				tasksMeta,
-				missingCategories: ["review", "recon", "qa", "architecture", "docs"],
+				missingCategories: [
+					"complex-coding",
+					"review",
+					"recon",
+					"qa",
+					"architecture",
+					"docs",
+				],
 				configRevision: readConfigRevision(configPath),
 			});
 			const before = readFileSync(configPath, "utf8");
@@ -1027,7 +1034,7 @@ describe("model configuration", () => {
 		);
 		assert.throws(
 			() => parseModelConfig({ models: { tasks: { debugging: ["fake/x"] } } }),
-			/models\.tasks\.debugging.*supported categories: coding, review, recon, qa, architecture, docs/,
+			/models\.tasks\.debugging.*supported categories: coding, complex-coding, review, recon, qa, architecture, docs/,
 		);
 		assert.throws(
 			() => parseModelConfig({ models: { tasks: { coding: null } } }),

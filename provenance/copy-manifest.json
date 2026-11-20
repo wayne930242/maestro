@@ -57,8 +57,8 @@
 			"archive": "provenance/upstream/docs/tools.md",
 			"classification": "split",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede)",
-				"blob": "e8516df2b193d55280931840f824abcc785a4b2f"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede) | weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514)",
+				"blob": "31aa59ef9824ec50cdadc1954261a81276f7db70"
 			}
 		},
 		{
@@ -345,7 +345,11 @@
 			"source": "maestro/core/config/task-model-types.ts",
 			"destination": "maestro/core/config/task-model-types.ts",
 			"blob": "642885bb5ac7aaaf95a8e1278ecc1b311a8b239c",
-			"archive": "provenance/upstream/maestro/core/config/task-model-types.ts"
+			"archive": "provenance/upstream/maestro/core/config/task-model-types.ts",
+			"owned_change": {
+				"reason": "weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514)",
+				"blob": "49f361fb9d6c5b047ca5cabf18d30f30e89b9fa3"
+			}
 		},
 		{
 			"kind": "copy",
@@ -802,8 +806,8 @@
 			"blob": "7720f5698f352b4ff909cadc8b09aa32ebe9dfd5",
 			"archive": "provenance/upstream/test/fixtures/tool-schema/current.json",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede)",
-				"blob": "dea5255274ccd766cb4598599b57087452b91203"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede) | weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514)",
+				"blob": "7ee7fb403c2f6238ded8b4f99c4cb3092acbd40a"
 			}
 		},
 		{
