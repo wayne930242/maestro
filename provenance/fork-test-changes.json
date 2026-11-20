@@ -38,5 +38,53 @@
 		"destination": "test/maestro/windows-support-scope-tools.test.ts",
 		"title": "async function loadHost(",
 		"reason": "weihung fork: WorktreeOperations.seedProjectPackages joins the fake operations (pi-herdr-agents fork f16666b)"
+	},
+	{
+		"destination": "test/maestro/deferred-tools.test.ts",
+		"title": "keeps host schemas, guidelines, and the catalog out until a search loads only its matches",
+		"renamed_to": "declares the host tools in the first request and never rebuilds the system prompt",
+		"reason": "weihung fork: routine host tools register direct, not deferred, so tool_search never rebuilds the system prompt (pi-herdr-agents fork 798f07a)"
+	},
+	{
+		"destination": "test/maestro/deferred-tools.test.ts",
+		"title": "leaves the one-shot task-model writer to interactive /subagents-init",
+		"reason": "weihung fork: routine host tools register direct, not deferred, so tool_search never rebuilds the system prompt (pi-herdr-agents fork 798f07a)"
+	},
+	{
+		"destination": "test/maestro/deferred-tools.test.ts",
+		"title": "keeps loaded tools and search active across reload and resume",
+		"renamed_to": "keeps the host tools declared across reload and resume",
+		"reason": "weihung fork: routine host tools register direct, not deferred, so tool_search never rebuilds the system prompt (pi-herdr-agents fork 798f07a)"
+	},
+	{
+		"destination": "test/maestro/deferred-tools.test.ts",
+		"title": "registers the routine tools deferred and the writer direct and inactive",
+		"renamed_to": "registers the routine tools direct and the writer direct and inactive",
+		"reason": "weihung fork: routine host tools register direct, not deferred, so tool_search never rebuilds the system prompt (pi-herdr-agents fork 798f07a)"
+	},
+	{
+		"destination": "test/maestro/deferred-tools.test.ts",
+		"title": "const PACKAGE_ROOT",
+		"removed": true,
+		"reason": "weihung fork: helpers unused once the routine host tools register direct (pi-herdr-agents fork 798f07a)"
+	},
+	{
+		"destination": "test/maestro/deferred-tools.test.ts",
+		"title": "const NAMING_RULE",
+		"removed": true,
+		"reason": "weihung fork: helpers unused once the routine host tools register direct (pi-herdr-agents fork 798f07a)"
+	},
+	{
+		"destination": "test/maestro/deferred-tools.test.ts",
+		"title": "const LOAD_SUBAGENT",
+		"removed": true,
+		"reason": "weihung fork: helpers unused once the routine host tools register direct (pi-herdr-agents fork 798f07a)"
+	},
+	{
+		"destination": "test/maestro/deferred-tools.test.ts",
+		"title": "routine host tools are deferred to Pi's native tool_search",
+		"renamed_to": "routine host tools are declared directly from the start",
+		"suite": true,
+		"reason": "weihung fork: routine host tools register direct (pi-herdr-agents fork 798f07a)"
 	}
 ]

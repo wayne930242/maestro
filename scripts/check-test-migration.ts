@@ -316,9 +316,16 @@ export function checkAdaptedHelper(
  * title and identity stay; only the body-equality check is waived, and a
  * record whose case is still unchanged (or no longer found) fails as stale.
  */
-interface ForkTestChange {
+export interface ForkTestChange {
 	destination: string;
+	/** The upstream case title (as in the pinned original). */
 	title: string;
+	/** The fork's title for the case, when it renamed it. */
+	renamed_to?: string;
+	/** A renamed describe title, mapped by test-unit only (no body check). */
+	suite?: boolean;
+	/** The fork deleted the statement (an unused helper). */
+	removed?: boolean;
 	reason: string;
 }
 
@@ -349,6 +356,15 @@ export function checkTestMigration(root: string): TestMigrationMap {
 	const forkChanges: ForkTestChange[] = existsSync(forkPath)
 		? JSON.parse(readFileSync(forkPath, "utf8"))
 		: [];
+	for (const change of forkChanges.filter((entry) => entry.suite))
+		assert(
+			change.reason &&
+				change.renamed_to &&
+				readFileSync(resolve(root, change.destination), "utf8").includes(
+					change.renamed_to,
+				),
+			`Stale fork suite rename: ${change.destination} ${change.title}`,
+		);
 	const usedForkChanges = new Set<ForkTestChange>();
 	const destinations = new Set<string>();
 	for (const map of maps) {
@@ -362,7 +378,7 @@ export function checkTestMigration(root: string): TestMigrationMap {
 			checkEntry(root, map, tree, entry, forkChanges, usedForkChanges);
 		}
 	}
-	for (const change of forkChanges)
+	for (const change of forkChanges.filter((entry) => !entry.suite))
 		assert(
 			change.reason && usedForkChanges.has(change),
 			`Stale fork test change: ${change.destination} ${change.title}`,
@@ -459,7 +475,9 @@ function checkEntry(
 				(change) =>
 					change.destination === entry.destination &&
 					caseHeader(slice).includes(change.title) &&
-					migrated.includes(change.title),
+					(change.removed
+						? !migrated.includes(change.title)
+						: migrated.includes(change.renamed_to ?? change.title)),
 			);
 			assert(
 				forkChange,

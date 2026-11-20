@@ -714,7 +714,11 @@
 			"source": "pi-extension/subagents/deferred-tools.ts",
 			"destination": "pi-extension/subagents/deferred-tools.ts",
 			"blob": "2fb3a060bd530519addcedf4896c336ce80ee7df",
-			"archive": "provenance/upstream/pi-extension/subagents/deferred-tools.ts"
+			"archive": "provenance/upstream/pi-extension/subagents/deferred-tools.ts",
+			"owned_change": {
+				"reason": "weihung fork: routine host tools register direct instead of deferred, so tool_search never rebuilds the system prompt (pi-herdr-agents fork 798f07a)",
+				"blob": "334fd1f9ad81d0973110074a003d963cf63b8313"
+			}
 		},
 		{
 			"kind": "copy",

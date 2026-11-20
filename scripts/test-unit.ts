@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
+	existsSync,
 	mkdirSync,
 	mkdtempSync,
 	readFileSync,
@@ -11,7 +12,10 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync, gunzipSync } from "node:zlib";
-import { checkTestMigration } from "./check-test-migration.ts";
+import {
+	checkTestMigration,
+	type ForkTestChange,
+} from "./check-test-migration.ts";
 
 interface Identity {
 	type: string;
@@ -232,6 +236,24 @@ try {
 		...expectedLeaves.map((e) => key(e)),
 		...added.map((e) => JSON.stringify([e.file, e.titles, false, false])),
 	].sort();
+	// weihung fork: a migrated case the fork renamed keeps its upstream identity.
+	const forkPath = new URL(
+		"../provenance/fork-test-changes.json",
+		import.meta.url,
+	);
+	const renames: ForkTestChange[] = existsSync(forkPath)
+		? JSON.parse(readFileSync(forkPath, "utf8")).filter(
+				(change: ForkTestChange) => change.renamed_to,
+			)
+		: [];
+	for (const event of observed)
+		event.titles = event.titles?.map(
+			(title) =>
+				renames.find(
+					(change) =>
+						change.destination === event.file && change.renamed_to === title,
+				)?.title ?? title,
+		);
 	const migrated = observed.filter(
 		(e) => e.kind !== "suite" && sourceFor.has(e.file),
 	);
