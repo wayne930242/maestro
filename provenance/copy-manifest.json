@@ -55,7 +55,11 @@
 			"destination": "docs/tools.md",
 			"blob": "edfd04d261745a323a919474557e3084a97f459d",
 			"archive": "provenance/upstream/docs/tools.md",
-			"classification": "split"
+			"classification": "split",
+			"owned_change": {
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115)",
+				"blob": "851ba5137a869ca189b19c087a9bba49364fc553"
+			}
 		},
 		{
 			"kind": "copy",
@@ -177,7 +181,11 @@
 			"source": "maestro/adapters/pi/launch.ts",
 			"destination": "maestro/adapters/pi/launch.ts",
 			"blob": "16c33eddff2f333e3dfa99031240b105078a6ac1",
-			"archive": "provenance/upstream/maestro/adapters/pi/launch.ts"
+			"archive": "provenance/upstream/maestro/adapters/pi/launch.ts",
+			"owned_change": {
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115)",
+				"blob": "e020225338706f48cac5e421a6ff479c7bef3898"
+			}
 		},
 		{
 			"kind": "copy",
@@ -198,8 +206,8 @@
 			"blob": "b329ef6e037d3f9874d1999a616b451fbb210633",
 			"archive": "provenance/upstream/maestro/adapters/pi/pi-harness-adapter.ts",
 			"owned_change": {
-				"reason": "#149: a non-zero exit with no errorMessage and no session messages reads the terminal tail into exitOutput, the read bounded by EXIT_OUTPUT_READ_TIMEOUT_MS.",
-				"blob": "638e2f0ffca2249195299faa73b9cdb8647a7f6c"
+				"reason": "#149: a non-zero exit with no errorMessage and no session messages reads the terminal tail into exitOutput, the read bounded by EXIT_OUTPUT_READ_TIMEOUT_MS. | weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115)",
+				"blob": "cbdd6d4f1ae088b27258bab8a0cb4ab60beaf3a7"
 			}
 		},
 		{
@@ -490,8 +498,8 @@
 			"blob": "8cd2d264f055d6e831ed6262c4b4e391375ea361",
 			"archive": "provenance/upstream/maestro/core/types.ts",
 			"owned_change": {
-				"reason": "#149: CompletionEvidence.exitOutput carries a child's last terminal lines when it fails before its session starts.",
-				"blob": "c67009368ca94e3fd1ae894cc6cc699b23f13809"
+				"reason": "#149: CompletionEvidence.exitOutput carries a child's last terminal lines when it fails before its session starts. | weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115)",
+				"blob": "6d99658c408533624bc17ec81e21a67689b80911"
 			}
 		},
 		{
@@ -633,7 +641,11 @@
 			"source": "pi-extension/subagents/catalog.ts",
 			"destination": "pi-extension/subagents/catalog.ts",
 			"blob": "8d1e996375c1d98443613cf7dce20211aa814650",
-			"archive": "provenance/upstream/pi-extension/subagents/catalog.ts"
+			"archive": "provenance/upstream/pi-extension/subagents/catalog.ts",
+			"owned_change": {
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115)",
+				"blob": "cce68f3469c1c78b0b7ff860a1989678fb373e33"
+			}
 		},
 		{
 			"kind": "copy",
@@ -691,7 +703,11 @@
 			"source": "pi-extension/subagents/launch.ts",
 			"destination": "pi-extension/subagents/launch.ts",
 			"blob": "dcb6c903a7ced7cf5e795fdac38b112baa795f41",
-			"archive": "provenance/upstream/pi-extension/subagents/launch.ts"
+			"archive": "provenance/upstream/pi-extension/subagents/launch.ts",
+			"owned_change": {
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115)",
+				"blob": "91a0d48bda57e56c50a31511b0a92c8d9ab8323b"
+			}
 		},
 		{
 			"kind": "copy",
@@ -784,7 +800,11 @@
 			"source": "test/fixtures/tool-schema/current.json",
 			"destination": "test/fixtures/tool-schema/current.json",
 			"blob": "7720f5698f352b4ff909cadc8b09aa32ebe9dfd5",
-			"archive": "provenance/upstream/test/fixtures/tool-schema/current.json"
+			"archive": "provenance/upstream/test/fixtures/tool-schema/current.json",
+			"owned_change": {
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115)",
+				"blob": "b57311e4f3da00badf5c81ca5bb196477d378295"
+			}
 		},
 		{
 			"kind": "copy",

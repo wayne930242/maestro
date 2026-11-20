@@ -122,6 +122,7 @@ export function createLaunchPlanner({
 					persistent,
 					notify: params.notify === true,
 					systemPromptMode: agentDefs?.systemPromptMode,
+					solutionSpace: params.solutionSpace?.trim() || undefined,
 				},
 				systemPrompt: params.agent ? undefined : params.systemPrompt,
 			},

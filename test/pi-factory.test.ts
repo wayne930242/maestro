@@ -57,6 +57,28 @@ async function quit(mock: ReturnType<typeof createMockExtensionApi>) {
 		await handler({ reason: "quit" }, { ui: { setWidget() {} } });
 }
 
+/**
+ * weihung fork: the fork changes some public tool descriptions and parameters
+ * (solutionSpace, complex-coding, cancel wording). Their reviewed shape is the
+ * fork's test/fixtures/tool-schema/current.json, which tool-schema.test.ts
+ * checks against live registrations and the released schema for breakage.
+ * Overlay only those two fields here; order, names, commands, shortcuts,
+ * events and the test surface still match H1's pin exactly.
+ */
+function forkToolSchemas(
+	tools: { name: string; description: string; parameters: unknown }[],
+) {
+	const snapshot: {
+		tools: { name: string; description: string; parameters: unknown }[];
+	} = JSON.parse(read("test/fixtures/tool-schema/current.json"));
+	for (const tool of tools) {
+		const fork = snapshot.tools.find((entry) => entry.name === tool.name);
+		if (!fork) continue;
+		tool.description = fork.description;
+		tool.parameters = fork.parameters;
+	}
+}
+
 function withEnv(values: Record<string, string>, run: () => Promise<void>) {
 	const saved = new Map(
 		Object.keys(values).map((key) => [key, process.env[key]]),
@@ -123,6 +145,7 @@ test("the factory reproduces H1's pinned parent and child/deny-tool registration
 					renderers: _renderers,
 					...expected
 				} = pinned[scope];
+				forkToolSchemas(expected.tools);
 				assert.deepEqual(actual, expected, scope);
 				// One registration per tool and command per load: no duplicates.
 				const names = mock.registeredTools.map(

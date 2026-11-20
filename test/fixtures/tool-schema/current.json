@@ -70,6 +70,10 @@
 							{ "const": "max", "type": "string" }
 						]
 					},
+					"solutionSpace": {
+						"description": "One or two sentences on how open-ended the work is, not the work itself: whether the fix or design is given, or which causes or designs remain open. The child receives it as PI_SUBAGENT_SOLUTION_SPACE, where an installed extension can choose the child's thinking level from it.",
+						"type": "string"
+					},
 					"skills": {
 						"description": "Comma-separated skills (overrides agent default)",
 						"type": "string"
