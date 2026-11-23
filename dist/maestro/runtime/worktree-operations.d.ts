@@ -23,8 +23,12 @@ export declare function readWorktreeManifest(path: string): JsonObject | undefin
 export declare function writeWorktreeManifest(path: string, value: JsonObject): void;
 export declare function captureWorktreeHandoff(worktree: WorktreeLaunch, timeoutMs?: number): Promise<WorktreeHandoff>;
 export declare function persistWorktreeResult(worktree: WorktreeLaunch, state: WorktreeResultState, handoff?: WorktreeHandoff): void;
-/** Individual visibility gaps warn; failed enumeration still blocks cleanup. */
-declare function processHolders(path: string, idleShellPids?: Set<number>, procRoot?: string, platform?: NodeJS.Platform): HolderInspection;
+/**
+ * Individual visibility gaps warn; failed enumeration still blocks cleanup.
+ * `readCwds` supplies the Darwin lsof listing; cleanup passes one it read
+ * asynchronously.
+ */
+declare function processHolders(path: string, idleShellPids?: Set<number>, procRoot?: string, platform?: NodeJS.Platform, readCwds?: (uid: number) => string): HolderInspection;
 export declare const __worktreeCleanupTest__: {
     processHolders: typeof processHolders;
     realpathWithoutOpening: typeof realpathWithoutOpening;

@@ -32,18 +32,33 @@ export interface WorktreeInventoryEntry {
     blockers: string[];
     warnings: string[];
 }
+/**
+ * What cheap reads of a checkout's Git files say about it. An absent field is
+ * unknown; `branch` is "" for a detached HEAD, as in CleanupGitState.
+ */
+export interface WorktreeIdentityHint {
+    branch?: string;
+    sourceRepo?: string;
+}
 /** All probes and effects are injectable; inventories never perform mutations. */
 export interface WorktreeCleanupOperations {
     scan(): string[];
     managedRoot(): string;
     realpath(path: string): string;
-    resolveSource(path: string): string;
+    resolveSource(path: string): string | Promise<string>;
+    /**
+     * Identify a canonical managed checkout from its Git files alone, without a
+     * subprocess. When present, removal fully inspects only the checkouts whose
+     * identity is unknown or can match the target. Without it, removal inspects
+     * every scanned checkout.
+     */
+    identify?(path: string): WorktreeIdentityHint | Promise<WorktreeIdentityHint>;
     inspectGit(path: string, sourceRepo: string): CleanupGitState | Promise<CleanupGitState>;
     listWorktrees(sourceRepo: string): WorktreeSurfaceInfo[] | Promise<WorktreeSurfaceInfo[]>;
     readManifests(): CleanupManifest[];
     holders(entry: WorktreeInventoryEntry): Promise<HolderInspection>;
     exists(path: string): boolean;
-    preserve(entry: WorktreeInventoryEntry): string;
+    preserve(entry: WorktreeInventoryEntry): string | Promise<string>;
     removeWorkspace(id: string): void | Promise<void>;
     /**
      * Suggest, never close, a primary workspace this process's worktree
@@ -51,7 +66,7 @@ export interface WorktreeCleanupOperations {
      */
     reportOpenedPrimaryWorkspace(sourceRepo: string, claims: readonly PrimaryWorkspaceClaim[]): OpenedPrimaryWorkspaceReport | undefined | Promise<OpenedPrimaryWorkspaceReport | undefined>;
     removeCheckout(sourceRepo: string, path: string): void | Promise<void>;
-    prune(sourceRepo: string): void;
+    prune(sourceRepo: string): void | Promise<void>;
     writeManifest(file: string, value: JsonObject): void;
 }
 export interface CleanupInput {

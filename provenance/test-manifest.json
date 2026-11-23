@@ -1158,7 +1158,8 @@
 		"test/fork/reload-legacy-kernel.test.ts",
 		"test/fork/worktree-project-packages.test.ts",
 		"test/fork/worktree-seed-launch.test.ts",
-		"test/fork/resume-system-prompt.test.ts"
+		"test/fork/resume-system-prompt.test.ts",
+		"test/fork/worktree-cleanup-nonblocking.test.ts"
 	],
 	"identity_ledger": "baseline/test-identities.json.gz",
 	"identity_capture": "evidence/baseline-final/baseline.jsonl",

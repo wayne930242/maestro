@@ -13,6 +13,7 @@ import {
 	writeFileSync,
 	unlinkSync,
 } from "node:fs";
+import { lstat, readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { isRecord, type JsonObject } from "../core/config/type-guards.ts";
@@ -24,6 +25,7 @@ import type {
 	CleanupGitState,
 	HolderInspection,
 	WorktreeCleanupOperations,
+	WorktreeIdentityHint,
 } from "../core/worktree-cleanup.ts";
 import {
 	isWorktreeManifest,
@@ -569,16 +571,100 @@ function errorMessage(error: any): string {
 }
 
 const CLEANUP_TIMEOUT_MS = 30_000;
+/** execFileSync's default maxBuffer, per output stream. */
+const CLEANUP_OUTPUT_BYTES = 1024 * 1024;
 
-function git(cwd: string, args: string[]): string {
-	return execFileSync("git", args, {
-		cwd,
-		env: gitEnvironment(),
-		encoding: "utf8",
-		stdio: ["ignore", "pipe", "pipe"],
-		timeout: CLEANUP_TIMEOUT_MS,
-		killSignal: "SIGKILL",
+/**
+ * execFileSync's contract without blocking the event loop: the same timeout,
+ * kill signal, output limit and error text (`spawnSync <file> <code>` for a
+ * spawn failure, timeout or overflow; `Command failed: <file> <args>` and any
+ * stderr for a failed exit).
+ */
+function execFileText(
+	file: string,
+	args: string[],
+	options: { cwd?: string; env?: NodeJS.ProcessEnv },
+): Promise<string> {
+	return new Promise((resolvePromise, reject) => {
+		const stdout: Buffer[] = [];
+		const stderr: Buffer[] = [];
+		let stdoutBytes = 0;
+		let stderrBytes = 0;
+		let settled = false;
+		let stopped: string | undefined;
+		const details = (status: number | null, signal: string | null) => ({
+			status,
+			signal,
+			stdout: Buffer.concat(stdout).toString("utf8"),
+			stderr: Buffer.concat(stderr).toString("utf8"),
+		});
+		const syscallError = (code: string | undefined) =>
+			Object.assign(new Error(`spawnSync ${file} ${code}`), {
+				code,
+				syscall: `spawnSync ${file}`,
+				path: file,
+				spawnargs: args,
+			});
+		const settle = (finish: () => void) => {
+			if (settled) return;
+			settled = true;
+			clearTimeout(timer);
+			finish();
+		};
+		let child: ReturnType<typeof spawn>;
+		try {
+			child = spawn(file, args, {
+				cwd: options.cwd,
+				env: options.env,
+				stdio: ["ignore", "pipe", "pipe"],
+			});
+		} catch (error) {
+			// SAFETY: spawn throws Node system errors with an errno code.
+			reject(syscallError((error as NodeJS.ErrnoException).code));
+			return;
+		}
+		const stop = (code: string) => {
+			if (stopped) return;
+			stopped = code;
+			child.kill("SIGKILL");
+		};
+		const timer = setTimeout(() => stop("ETIMEDOUT"), CLEANUP_TIMEOUT_MS);
+		child.stdout?.on("data", (chunk: Buffer) => {
+			stdoutBytes += chunk.length;
+			if (stdoutBytes > CLEANUP_OUTPUT_BYTES) stop("ENOBUFS");
+			else stdout.push(chunk);
+		});
+		child.stderr?.on("data", (chunk: Buffer) => {
+			stderrBytes += chunk.length;
+			if (stderrBytes > CLEANUP_OUTPUT_BYTES) stop("ENOBUFS");
+			else stderr.push(chunk);
+		});
+		child.on("error", (error: NodeJS.ErrnoException) =>
+			settle(() => reject(syscallError(error.code))),
+		);
+		child.on("close", (status, signal) =>
+			settle(() => {
+				if (stopped)
+					return reject(
+						Object.assign(syscallError(stopped), details(status, signal)),
+					);
+				const result = details(status, signal);
+				if (status === 0) return resolvePromise(result.stdout);
+				reject(
+					Object.assign(
+						new Error(
+							`Command failed: ${[file, ...args].join(" ")}${result.stderr ? `\n${result.stderr}` : ""}`,
+						),
+						result,
+					),
+				);
+			}),
+		);
 	});
+}
+
+function git(cwd: string, args: string[]): Promise<string> {
+	return execFileText("git", args, { cwd, env: gitEnvironment() });
 }
 function exists(path: string): boolean {
 	try {
@@ -598,40 +684,46 @@ function directories(path: string): string[] {
 }
 
 /** Source identity is resolved independently of status so Git failures remain visible. */
-function resolveSource(path: string): string {
+async function resolveSource(path: string): Promise<string> {
 	const common = realpathWithoutOpening(
-		git(path, [
-			"rev-parse",
-			"--path-format=absolute",
-			"--git-common-dir",
-		]).trim(),
+		(
+			await git(path, [
+				"rev-parse",
+				"--path-format=absolute",
+				"--git-common-dir",
+			])
+		).trim(),
 	);
 	// A submodule's common directory lives under the superproject's
 	// .git/modules; only core.worktree, including included config, names its checkout.
-	const configured = git(common, [
-		`--git-dir=${common}`,
-		"config",
-		"--default",
-		"",
-		"--get",
-		"core.worktree",
-	]).trim();
+	const configured = (
+		await git(common, [
+			`--git-dir=${common}`,
+			"config",
+			"--default",
+			"",
+			"--get",
+			"core.worktree",
+		])
+	).trim();
 	const root = realpathWithoutOpening(
 		configured ? resolve(common, configured) : dirname(common),
 	);
 	if (
 		realpathWithoutOpening(
-			git(root, ["rev-parse", "--show-toplevel"]).trim(),
+			(await git(root, ["rev-parse", "--show-toplevel"])).trim(),
 		) !== root
 	)
 		throw new Error("Cannot prove source repository root");
 	if (
 		realpathWithoutOpening(
-			git(root, [
-				"rev-parse",
-				"--path-format=absolute",
-				"--git-common-dir",
-			]).trim(),
+			(
+				await git(root, [
+					"rev-parse",
+					"--path-format=absolute",
+					"--git-common-dir",
+				])
+			).trim(),
 		) !== common
 	)
 		throw new Error("Source Git directory mismatch");
@@ -672,7 +764,9 @@ async function inspectGit(
 	path: string,
 	sourceRepo: string,
 ): Promise<CleanupGitState> {
-	const records = git(sourceRepo, ["worktree", "list", "--porcelain", "-z"])
+	const records = (
+		await git(sourceRepo, ["worktree", "list", "--porcelain", "-z"])
+	)
 		.split("\0\0")
 		.map((record) => record.split("\0"));
 	const record = records.find((fields) => {
@@ -684,15 +778,13 @@ async function inspectGit(
 	});
 	// rev-parse returns HEAD for a detached checkout, without treating a valid
 	// detached state as an inspection error. Only named refs may be preserved.
-	const headRef = git(path, [
-		"rev-parse",
-		"--symbolic-full-name",
-		"HEAD",
-	]).trim();
+	const headRef = (
+		await git(path, ["rev-parse", "--symbolic-full-name", "HEAD"])
+	).trim();
 	const branch = headRef.startsWith("refs/heads/")
 		? headRef.slice("refs/heads/".length)
 		: "";
-	const status = git(path, [
+	const status = await git(path, [
 		"status",
 		"--porcelain=v1",
 		"--untracked-files=all",
@@ -707,7 +799,7 @@ async function inspectGit(
 	}
 	return {
 		branch,
-		headSha: git(path, ["rev-parse", "HEAD"]).trim(),
+		headSha: (await git(path, ["rev-parse", "HEAD"])).trim(),
 		registered:
 			!!record &&
 			path !== sourceRepo &&
@@ -718,30 +810,48 @@ async function inspectGit(
 			(field) => field === "locked" || field.startsWith("locked "),
 		),
 		dirtyFiles,
-		untrackedFiles: git(path, [
-			"ls-files",
-			"--others",
-			"--exclude-standard",
-			"-z",
-		])
+		untrackedFiles: (
+			await git(path, ["ls-files", "--others", "--exclude-standard", "-z"])
+		)
 			.split("\0")
 			.filter(Boolean).length,
 		ignoredFiles: await countIgnoredFiles(path),
-		conflicts: git(path, ["diff", "--name-only", "--diff-filter=U", "-z"])
+		conflicts: (
+			await git(path, ["diff", "--name-only", "--diff-filter=U", "-z"])
+		)
 			.split("\0")
 			.filter(Boolean).length,
-		submodules: git(path, ["submodule", "status", "--recursive"])
+		submodules: (await git(path, ["submodule", "status", "--recursive"]))
 			.split("\n")
 			.some((line) => line.length > 0 && !line.startsWith("-")),
 	};
 }
 
-/** Individual visibility gaps warn; failed enumeration still blocks cleanup. */
+function lsofCwdArgs(uid: number): string[] {
+	return ["-n", "-P", "-a", "-u", String(uid), "-d", "cwd", "-Fpcn"];
+}
+
+/** The Darwin same-user cwd listing, read synchronously. */
+function readLsofCwds(uid: number): string {
+	return execFileSync("lsof", lsofCwdArgs(uid), {
+		encoding: "utf8",
+		timeout: CLEANUP_TIMEOUT_MS,
+		killSignal: "SIGKILL",
+		stdio: ["ignore", "pipe", "pipe"],
+	});
+}
+
+/**
+ * Individual visibility gaps warn; failed enumeration still blocks cleanup.
+ * `readCwds` supplies the Darwin lsof listing; cleanup passes one it read
+ * asynchronously.
+ */
 function processHolders(
 	path: string,
 	idleShellPids = new Set<number>(),
 	procRoot = "/proc",
 	platform: NodeJS.Platform = process.platform,
+	readCwds: (uid: number) => string = readLsofCwds,
 ): HolderInspection {
 	const blockers: string[] = [];
 	const unreadable = new Set<string>();
@@ -824,16 +934,7 @@ function processHolders(
 		// A nonzero lsof exit is a global failure, even if partial stdout exists.
 		let output: string;
 		try {
-			output = execFileSync(
-				"lsof",
-				["-n", "-P", "-a", "-u", String(uid), "-d", "cwd", "-Fpcn"],
-				{
-					encoding: "utf8",
-					timeout: CLEANUP_TIMEOUT_MS,
-					killSignal: "SIGKILL",
-					stdio: ["ignore", "pipe", "pipe"],
-				},
-			);
+			output = readCwds(uid);
 		} catch {
 			// Command errors may embed partial process output; never disclose it.
 			throw new Error("lsof failed to enumerate processes");
@@ -871,6 +972,78 @@ function processHolders(
 			`${unreadable.size} process(es) (PIDs ${[...unreadable].slice(0, 10).join(", ")}${unreadable.size > 10 ? ", …" : ""}) have unreadable details; not proven unrelated to the checkout.`,
 		);
 	return { blockers, warnings };
+}
+
+/**
+ * On Darwin, read the lsof cwd listing without blocking the event loop, for
+ * processHolders to parse. Elsewhere processHolders needs no subprocess.
+ */
+async function prefetchLsofCwds(): Promise<
+	((uid: number) => string) | undefined
+> {
+	if (process.platform !== "darwin" || !process.getuid) return undefined;
+	try {
+		const output = await execFileText(
+			"lsof",
+			lsofCwdArgs(process.getuid()),
+			{},
+		);
+		return () => output;
+	} catch (error) {
+		return () => {
+			throw error;
+		};
+	}
+}
+
+async function readOptional(path: string): Promise<string | undefined> {
+	try {
+		return await readFile(path, "utf8");
+	} catch (error) {
+		// SAFETY: filesystem calls throw Node errors with an optional errno code.
+		if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+		throw error;
+	}
+}
+
+/**
+ * A checkout's branch and source repository from its Git files alone, with no
+ * subprocess. Whatever Git could resolve differently (a reftable or symbolic
+ * branch ref, a configured core.worktree, an include) stays unknown, so
+ * removal inspects that checkout in full.
+ */
+async function identifyWorktree(path: string): Promise<WorktreeIdentityHint> {
+	const dotGit = join(path, ".git");
+	const stat = await lstat(dotGit);
+	let gitDir: string;
+	if (stat.isDirectory()) gitDir = dotGit;
+	else if (stat.isFile()) {
+		const pointer = /^gitdir: ([^\n]+?)\r?\n?$/.exec(
+			await readFile(dotGit, "utf8"),
+		);
+		if (!pointer) return {};
+		gitDir = resolve(path, pointer[1]);
+	} else return {};
+	const commonDir = (await readOptional(join(gitDir, "commondir")))?.trim();
+	const common = realpathWithoutOpening(resolve(gitDir, commonDir || "."));
+	const hint: WorktreeIdentityHint = {};
+	const head = await readFile(join(gitDir, "HEAD"), "utf8");
+	const ref = /^ref: refs\/heads\/([^\n]+)\n?$/.exec(head)?.[1];
+	if (ref !== undefined) {
+		const reftable = await lstat(join(common, "reftable")).then(
+			() => true,
+			() => false,
+		);
+		const loose = await readOptional(join(common, "refs", "heads", ref));
+		if (!reftable && !loose?.startsWith("ref:")) hint.branch = ref;
+	} else if (/^(?:[0-9a-f]{40}|[0-9a-f]{64})\n?$/.test(head)) hint.branch = "";
+	const config = await readOptional(join(common, "config"));
+	if (
+		config !== undefined &&
+		!/^\s*(?:worktree|worktreeconfig)\s*(?:=|$)|^\s*\[\s*include/im.test(config)
+	)
+		hint.sourceRepo = realpathWithoutOpening(dirname(common));
+	return hint;
 }
 
 export const __worktreeCleanupTest__ = {
@@ -912,6 +1085,7 @@ export function createWorktreeCleanupOperations(
 		},
 		realpath: realpathWithoutOpening,
 		resolveSource,
+		identify: identifyWorktree,
 		inspectGit,
 		listWorktrees: (source) =>
 			provider.listWorktreeSurfaces({
@@ -965,7 +1139,14 @@ export function createWorktreeCleanupOperations(
 				}
 			}
 			try {
-				const inspection = processHolders(entry.path, idleShellPids);
+				const readCwds = await prefetchLsofCwds();
+				const inspection = processHolders(
+					entry.path,
+					idleShellPids,
+					undefined,
+					undefined,
+					readCwds,
+				);
 				return {
 					blockers: [...blockers, ...inspection.blockers],
 					warnings: inspection.warnings,
@@ -982,23 +1163,25 @@ export function createWorktreeCleanupOperations(
 			}
 		},
 		exists,
-		preserve: (entry) => {
+		preserve: async (entry) => {
 			if (
 				!entry.branch ||
-				git(entry.path, ["symbolic-ref", "--short", "HEAD"]).trim() !==
+				(await git(entry.path, ["symbolic-ref", "--short", "HEAD"])).trim() !==
 					entry.branch
 			)
 				throw new Error("Retained branch changed before preservation");
-			const index = git(entry.path, [
-				"rev-parse",
-				"--path-format=absolute",
-				"--git-path",
-				"index",
-			]).trim();
+			const index = (
+				await git(entry.path, [
+					"rev-parse",
+					"--path-format=absolute",
+					"--git-path",
+					"index",
+				])
+			).trim();
 			const originalIndex = exists(index) ? readFileSync(index) : undefined;
 			try {
-				git(entry.path, ["add", "-A"]);
-				git(entry.path, [
+				await git(entry.path, ["add", "-A"]);
+				await git(entry.path, [
 					"commit",
 					"-m",
 					"WIP: preserve worktree before explicit cleanup",
@@ -1008,17 +1191,17 @@ export function createWorktreeCleanupOperations(
 				else if (exists(index)) unlinkSync(index);
 				throw error;
 			}
-			return git(entry.path, ["rev-parse", "HEAD"]).trim();
+			return (await git(entry.path, ["rev-parse", "HEAD"])).trim();
 		},
 		removeWorkspace: (id) =>
 			provider.removeWorktreeSurface(id, { timeoutMs: CLEANUP_TIMEOUT_MS }),
 		reportOpenedPrimaryWorkspace: (sourceRepo, claims) =>
 			provider.reportOpenedPrimaryWorkspace({ sourceRepo, claims }),
-		removeCheckout: (source, path) => {
-			git(source, ["worktree", "remove", "--", path]);
+		removeCheckout: async (source, path) => {
+			await git(source, ["worktree", "remove", "--", path]);
 		},
-		prune: (source) => {
-			git(source, ["worktree", "prune"]);
+		prune: async (source) => {
+			await git(source, ["worktree", "prune"]);
 		},
 		writeManifest: (file, value) => {
 			if (!readWorktreeManifest(file))

@@ -86,5 +86,10 @@
 		"renamed_to": "routine host tools are declared directly from the start",
 		"suite": true,
 		"reason": "weihung fork: routine host tools register direct (pi-herdr-agents fork 798f07a)"
+	},
+	{
+		"destination": "test/maestro/audit-git-environment-tools.test.ts",
+		"title": "host Git ignores poisoned repository while preserving linked checkout, includes and hooks",
+		"reason": "weihung fork: cleanup resolveSource and preserve run Git asynchronously and return promises"
 	}
 ]

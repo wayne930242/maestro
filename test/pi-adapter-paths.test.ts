@@ -436,7 +436,7 @@ test("cleanup operations inventory, inspect, preserve and remove real managed ch
 		assert.deepEqual(ops.readManifests(), []);
 		assert.deepEqual(ops.scan().sort(), [alpha, detached].sort());
 		assert.equal(ops.managedRoot(), managed);
-		assert.equal(ops.resolveSource(alpha), source);
+		assert.equal(await ops.resolveSource(alpha), source);
 
 		writeFileSync(join(alpha, "dirty.txt"), "work\n");
 		mkdirSync(join(alpha, "ignored"));
@@ -484,21 +484,21 @@ test("cleanup operations inventory, inspect, preserve and remove real managed ch
 			git(source, ["rev-parse", "main"]).trim(),
 		);
 		const before = state.headSha;
-		const preserved = ops.preserve(entry(alpha, "alpha"));
+		const preserved = await ops.preserve(entry(alpha, "alpha"));
 		assert.notEqual(preserved, before);
 		assert.equal(
 			git(alpha, ["log", "-1", "--format=%s"]).trim(),
 			"WIP: preserve worktree before explicit cleanup",
 		);
 		const clean = git(alpha, ["rev-parse", "HEAD"]).trim();
-		assert.throws(
-			() => ops.preserve(entry(alpha, "alpha")),
+		await assert.rejects(
+			async () => ops.preserve(entry(alpha, "alpha")),
 			/git commit/,
 			"nothing to preserve fails without inventing a commit",
 		);
 		assert.equal(git(alpha, ["rev-parse", "HEAD"]).trim(), clean);
-		assert.throws(
-			() => ops.preserve(entry(alpha, "renamed")),
+		await assert.rejects(
+			async () => ops.preserve(entry(alpha, "renamed")),
 			/^Error: Retained branch changed before preservation$/,
 		);
 
@@ -521,8 +521,8 @@ test("cleanup operations inventory, inspect, preserve and remove real managed ch
 			ops.readManifests().map((entry) => entry.file),
 			[manifest],
 		);
-		ops.removeCheckout(source, alpha);
-		ops.prune(source);
+		await ops.removeCheckout(source, alpha);
+		await ops.prune(source);
 		assert.equal(ops.exists(alpha), false);
 		assert.deepEqual(
 			git(source, ["branch", "--list", "alpha"]).trim(),
@@ -542,8 +542,8 @@ test("cleanup operations inventory, inspect, preserve and remove real managed ch
 			state: "retained",
 		});
 		assert.equal(readWorktreeManifest(manifest)?.state, "retained");
-		assert.throws(
-			() => ops.resolveSource(join(root, "missing")),
+		await assert.rejects(
+			async () => ops.resolveSource(join(root, "missing")),
 			/ENOENT|spawn/,
 		);
 		assert.equal(JSON.parse(readFileSync(manifest, "utf8")).path, alpha);

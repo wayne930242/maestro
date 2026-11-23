@@ -94,7 +94,7 @@ test("host Git ignores poisoned repository while preserving linked checkout, inc
 			manifestDir: root,
 			liveHolders: () => [],
 		});
-		assert.equal(ops.resolveSource(linked), source);
+		assert.equal(await ops.resolveSource(linked), source);
 		const state = await ops.inspectGit(linked, source);
 		assert.equal(state.registered, true);
 		assert.equal(state.ignoredFiles, 1);
@@ -102,7 +102,7 @@ test("host Git ignores poisoned repository while preserving linked checkout, inc
 		const hook = join(hooks, "pre-commit");
 		writeFileSync(hook, "#!/bin/sh\nprintf hook > hook-ran\n");
 		chmodSync(hook, 0o755);
-		const sha = ops.preserve({
+		const sha = await ops.preserve({
 			path: linked,
 			branch: "linked",
 			contained: true,

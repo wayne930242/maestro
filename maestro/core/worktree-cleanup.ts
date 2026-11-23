@@ -46,12 +46,28 @@ export interface WorktreeInventoryEntry {
 	warnings: string[];
 }
 
+/**
+ * What cheap reads of a checkout's Git files say about it. An absent field is
+ * unknown; `branch` is "" for a detached HEAD, as in CleanupGitState.
+ */
+export interface WorktreeIdentityHint {
+	branch?: string;
+	sourceRepo?: string;
+}
+
 /** All probes and effects are injectable; inventories never perform mutations. */
 export interface WorktreeCleanupOperations {
 	scan(): string[];
 	managedRoot(): string;
 	realpath(path: string): string;
-	resolveSource(path: string): string;
+	resolveSource(path: string): string | Promise<string>;
+	/**
+	 * Identify a canonical managed checkout from its Git files alone, without a
+	 * subprocess. When present, removal fully inspects only the checkouts whose
+	 * identity is unknown or can match the target. Without it, removal inspects
+	 * every scanned checkout.
+	 */
+	identify?(path: string): WorktreeIdentityHint | Promise<WorktreeIdentityHint>;
 	inspectGit(
 		path: string,
 		sourceRepo: string,
@@ -62,7 +78,7 @@ export interface WorktreeCleanupOperations {
 	readManifests(): CleanupManifest[];
 	holders(entry: WorktreeInventoryEntry): Promise<HolderInspection>;
 	exists(path: string): boolean;
-	preserve(entry: WorktreeInventoryEntry): string;
+	preserve(entry: WorktreeInventoryEntry): string | Promise<string>;
 	removeWorkspace(id: string): void | Promise<void>;
 	/**
 	 * Suggest, never close, a primary workspace this process's worktree
@@ -76,7 +92,7 @@ export interface WorktreeCleanupOperations {
 		| undefined
 		| Promise<OpenedPrimaryWorkspaceReport | undefined>;
 	removeCheckout(sourceRepo: string, path: string): void | Promise<void>;
-	prune(sourceRepo: string): void;
+	prune(sourceRepo: string): void | Promise<void>;
 	writeManifest(file: string, value: JsonObject): void;
 }
 export interface CleanupInput {
@@ -167,7 +183,7 @@ async function inspectEntry(
 				"Managed checkout is a symlink to an unmanaged location; inspect residue manually",
 			);
 		entry.path = canonicalPath;
-		entry.sourceRepo = ops.realpath(ops.resolveSource(entry.path));
+		entry.sourceRepo = ops.realpath(await ops.resolveSource(entry.path));
 		entry.contained = contained(ops.realpath(cwd), entry.sourceRepo);
 		entry.manifest = manifests.filter(({ value }) => {
 			if (value.state === "removed" || !isString(value.path)) return false;
@@ -204,7 +220,7 @@ async function inspectEntry(
 			if (
 				value.branch !== entry.branch ||
 				(isString(value.sourceCwd) &&
-					ops.realpath(ops.resolveSource(value.sourceCwd)) !==
+					ops.realpath(await ops.resolveSource(value.sourceCwd)) !==
 						entry.sourceRepo) ||
 				(isString(value.workspaceId) &&
 					entry.workspaceId &&
@@ -227,15 +243,156 @@ async function inspectEntry(
 	return entry;
 }
 
+/** Checkouts inspected at once; each inspection runs its own Git and lsof calls. */
+const INSPECTION_CONCURRENCY = 4;
+
+/** Inspect in bounded parallel, keeping the rows in scan order. */
+async function inspectEntries(
+	paths: readonly string[],
+	cwd: string,
+	ops: WorktreeCleanupOperations,
+	manifests: CleanupManifest[],
+): Promise<WorktreeInventoryEntry[]> {
+	const rows: WorktreeInventoryEntry[] = [];
+	let next = 0;
+	const worker = async () => {
+		while (next < paths.length) {
+			const index = next++;
+			rows[index] = await inspectEntry(paths[index], cwd, ops, manifests);
+		}
+	};
+	await Promise.all(
+		Array.from(
+			{ length: Math.min(INSPECTION_CONCURRENCY, paths.length) },
+			worker,
+		),
+	);
+	return rows;
+}
+
 export async function listContainedWorktrees({
 	cwd,
 	operations: ops,
 }: CleanupInput): Promise<WorktreeInventoryEntry[]> {
 	const manifests = ops.readManifests();
-	const rows: WorktreeInventoryEntry[] = [];
-	for (const path of new Set(ops.scan()))
-		rows.push(await inspectEntry(path, cwd, ops, manifests));
-	return rows;
+	return inspectEntries([...new Set(ops.scan())], cwd, ops, manifests);
+}
+
+/** An absolute target that names a checkout through a link resolves to it. */
+function removalTargetPath(
+	paths: readonly string[],
+	target: string,
+	ops: WorktreeCleanupOperations,
+): string {
+	return !paths.includes(target) && isAbsolute(target) && ops.exists(target)
+		? ops.realpath(target)
+		: target;
+}
+
+/**
+ * Inventory rows a removal target can match, fully inspected. With
+ * `identify`, a checkout is skipped only when its cheap identity proves it
+ * cannot match: its path differs, its branch is known and differs, and its
+ * source is out of scope or Herdr lists no such workspace for it. Every
+ * checkout whose identity stays unknown is inspected, so inspection failures
+ * still surface. The managed path is resolved as inspectEntry resolves it.
+ */
+async function removalCandidates({
+	cwd,
+	operations: ops,
+	target,
+}: CleanupInput & { target: string }): Promise<{
+	rows: WorktreeInventoryEntry[];
+	targetPath: string;
+}> {
+	const identify = ops.identify?.bind(ops);
+	if (!identify) {
+		const rows = await listContainedWorktrees({ cwd, operations: ops });
+		return {
+			rows,
+			targetPath: removalTargetPath(
+				rows.map((row) => row.path),
+				target,
+				ops,
+			),
+		};
+	}
+	const manifests = ops.readManifests();
+	const located = [...new Set(ops.scan())].map((path) => {
+		try {
+			const canonical = ops.realpath(path);
+			return {
+				path,
+				managed: contained(ops.managedRoot(), canonical)
+					? canonical
+					: undefined,
+			};
+		} catch {
+			return { path, managed: undefined };
+		}
+	});
+	const targetPath = removalTargetPath(
+		located.map(({ path, managed }) => managed ?? path),
+		target,
+		ops,
+	);
+	let scope: string | undefined;
+	try {
+		scope = ops.realpath(cwd);
+	} catch {
+		scope = undefined;
+	}
+	const workspaces = new Map<
+		string,
+		Promise<WorktreeSurfaceInfo[] | undefined>
+	>();
+	const mayMatch = async (managed: string): Promise<boolean> => {
+		let hint: WorktreeIdentityHint;
+		try {
+			hint = await identify(managed);
+		} catch {
+			return true;
+		}
+		if (hint.branch === undefined || hint.branch === target) return true;
+		if (hint.sourceRepo === undefined || scope === undefined) return true;
+		// Only an in-scope checkout carries a Herdr workspace identity.
+		if (!contained(scope, hint.sourceRepo)) return false;
+		let listing = workspaces.get(hint.sourceRepo);
+		if (!listing) {
+			const sourceRepo = hint.sourceRepo;
+			listing = (async () => {
+				try {
+					return await ops.listWorktrees(sourceRepo);
+				} catch {
+					return undefined;
+				}
+			})();
+			workspaces.set(sourceRepo, listing);
+		}
+		const listed = await listing;
+		if (!listed) return true;
+		return listed.some((row) => {
+			if (row.workspaceId !== target) return false;
+			try {
+				return ops.realpath(row.path) === managed;
+			} catch {
+				return true;
+			}
+		});
+	};
+	const candidates: string[] = [];
+	for (const { path, managed } of located)
+		if (
+			!managed ||
+			managed === target ||
+			managed === targetPath ||
+			(await mayMatch(managed))
+		)
+			candidates.push(path);
+	return {
+		rows: await inspectEntries(candidates, cwd, ops, manifests),
+		targetPath,
+	};
 }
 
 export function formatWorktreeInventory(
@@ -282,13 +439,7 @@ export async function removeContainedWorktree(
 				: ` ${ignoredFiles} ignored files${preservationAttempted ? " are not captured by preservation" : " present"}.`
 			: "";
 	try {
-		const rows = await listContainedWorktrees(input);
-		const targetPath =
-			!rows.some((row) => row.path === input.target) &&
-			isAbsolute(input.target) &&
-			ops.exists(input.target)
-				? ops.realpath(input.target)
-				: input.target;
+		const { rows, targetPath } = await removalCandidates(input);
 		const matches = rows.filter(
 			(row) =>
 				row.path === input.target ||
@@ -356,7 +507,7 @@ export async function removeContainedWorktree(
 			});
 		if (entry.git && (entry.git.dirtyFiles || entry.git.untrackedFiles)) {
 			preservationAttempted = true;
-			preservationSha = ops.preserve(entry);
+			preservationSha = await ops.preserve(entry);
 			const before = entry;
 			entry = await inspectEntry(
 				entry.path,
@@ -386,7 +537,7 @@ export async function removeContainedWorktree(
 		if (ops.exists(entry.path))
 			throw new Error("Removal left the checkout present");
 		checkoutRemoved = true;
-		if (!entry.workspaceId) ops.prune(entry.sourceRepo);
+		if (!entry.workspaceId) await ops.prune(entry.sourceRepo);
 		const warnings: string[] = [];
 		let primaryNote = "";
 		const claims = claimsForSource(
