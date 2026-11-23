@@ -571,7 +571,7 @@ function errorMessage(error: any): string {
 }
 
 const CLEANUP_TIMEOUT_MS = 30_000;
-/** execFileSync's default maxBuffer, per output stream. */
+/** execFileSync's default maxBuffer, shared by stdout and stderr. */
 const CLEANUP_OUTPUT_BYTES = 1024 * 1024;
 
 /**
@@ -583,13 +583,12 @@ const CLEANUP_OUTPUT_BYTES = 1024 * 1024;
 function execFileText(
 	file: string,
 	args: string[],
-	options: { cwd?: string; env?: NodeJS.ProcessEnv },
+	options: { cwd?: string; env?: NodeJS.ProcessEnv; timeoutMs?: number },
 ): Promise<string> {
 	return new Promise((resolvePromise, reject) => {
 		const stdout: Buffer[] = [];
 		const stderr: Buffer[] = [];
-		let stdoutBytes = 0;
-		let stderrBytes = 0;
+		let outputBytes = 0;
 		let settled = false;
 		let stopped: string | undefined;
 		const details = (status: number | null, signal: string | null) => ({
@@ -627,18 +626,23 @@ function execFileText(
 			if (stopped) return;
 			stopped = code;
 			child.kill("SIGKILL");
+			// A grandchild (a hook's background job) can keep the pipes open
+			// after the child exits; 'close' must not wait for it.
+			child.stdout?.destroy();
+			child.stderr?.destroy();
 		};
-		const timer = setTimeout(() => stop("ETIMEDOUT"), CLEANUP_TIMEOUT_MS);
-		child.stdout?.on("data", (chunk: Buffer) => {
-			stdoutBytes += chunk.length;
-			if (stdoutBytes > CLEANUP_OUTPUT_BYTES) stop("ENOBUFS");
-			else stdout.push(chunk);
-		});
-		child.stderr?.on("data", (chunk: Buffer) => {
-			stderrBytes += chunk.length;
-			if (stderrBytes > CLEANUP_OUTPUT_BYTES) stop("ENOBUFS");
-			else stderr.push(chunk);
-		});
+		const timer = setTimeout(
+			() => stop("ETIMEDOUT"),
+			options.timeoutMs ?? CLEANUP_TIMEOUT_MS,
+		);
+		const collect = (into: Buffer[]) => (chunk: Buffer) => {
+			if (stopped) return;
+			outputBytes += chunk.length;
+			if (outputBytes > CLEANUP_OUTPUT_BYTES) stop("ENOBUFS");
+			else into.push(chunk);
+		};
+		child.stdout?.on("data", collect(stdout));
+		child.stderr?.on("data", collect(stderr));
 		child.on("error", (error: NodeJS.ErrnoException) =>
 			settle(() => reject(syscallError(error.code))),
 		);
@@ -1022,13 +1026,14 @@ async function identifyWorktree(path: string): Promise<WorktreeIdentityHint> {
 			await readFile(dotGit, "utf8"),
 		);
 		if (!pointer) return {};
-		gitDir = resolve(path, pointer[1]);
+		gitDir = realpathWithoutOpening(resolve(path, pointer[1]));
 	} else return {};
 	const commonDir = (await readOptional(join(gitDir, "commondir")))?.trim();
 	const common = realpathWithoutOpening(resolve(gitDir, commonDir || "."));
 	const hint: WorktreeIdentityHint = {};
-	const head = await readFile(join(gitDir, "HEAD"), "utf8");
-	const ref = /^ref: refs\/heads\/([^\n]+)\n?$/.exec(head)?.[1];
+	// Git ignores trailing whitespace in HEAD.
+	const head = (await readFile(join(gitDir, "HEAD"), "utf8")).trimEnd();
+	const ref = /^ref: refs\/heads\/(\S+)$/.exec(head)?.[1];
 	if (ref !== undefined) {
 		const reftable = await lstat(join(common, "reftable")).then(
 			() => true,
@@ -1036,17 +1041,18 @@ async function identifyWorktree(path: string): Promise<WorktreeIdentityHint> {
 		);
 		const loose = await readOptional(join(common, "refs", "heads", ref));
 		if (!reftable && !loose?.startsWith("ref:")) hint.branch = ref;
-	} else if (/^(?:[0-9a-f]{40}|[0-9a-f]{64})\n?$/.test(head)) hint.branch = "";
+	} else if (/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(head)) hint.branch = "";
 	const config = await readOptional(join(common, "config"));
-	if (
-		config !== undefined &&
-		!/^\s*(?:worktree|worktreeconfig)\s*(?:=|$)|^\s*\[\s*include/im.test(config)
-	)
+	// Any mention of worktree or include (core.worktree on the section-header
+	// line, includeIf, extensions.worktreeConfig) leaves the source unknown.
+	if (config !== undefined && !/worktree|include/i.test(config))
 		hint.sourceRepo = realpathWithoutOpening(dirname(common));
 	return hint;
 }
 
 export const __worktreeCleanupTest__ = {
+	execFileText,
+	identifyWorktree,
 	processHolders,
 	realpathWithoutOpening,
 };

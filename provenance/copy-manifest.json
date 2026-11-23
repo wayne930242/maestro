@@ -658,7 +658,7 @@
 			"archive": "provenance/upstream/maestro/runtime/worktree-operations.ts",
 			"owned_change": {
 				"reason": "weihung fork: seed installed project packages (.pi/npm, .pi/git) into new managed worktrees (pi-herdr-agents fork f16666b) | Seed in the actual child cwd and preserve a tracked package .gitignore. | weihung fork: worktree removal fully inspects only the checkouts that can match its target, and cleanup Git and lsof calls run asynchronously so Pi's event loop stays responsive",
-				"blob": "b4901332da565567e287584da0123efb59f19441"
+				"blob": "9821774bcb91dd20ae283d7da34ece844c0b6e13"
 			}
 		},
 		{
