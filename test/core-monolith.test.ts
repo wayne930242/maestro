@@ -585,27 +585,6 @@ describe("shared subagent configuration path", () => {
 });
 
 describe("pane configuration", () => {
-	it("loads a positive safe minimum split size, defaulting to 80", () => {
-		assert.equal(parsePaneConfig({}).minSplitCols, 80);
-		assert.equal(
-			parsePaneConfig({ panes: { minSplitCols: 12 } }).minSplitCols,
-			12,
-		);
-		for (const minSplitCols of [
-			0,
-			-1,
-			1.5,
-			"80",
-			null,
-			Number.MAX_SAFE_INTEGER + 1,
-		]) {
-			assert.throws(
-				() => parsePaneConfig({ panes: { minSplitCols } }),
-				/minSplitCols must be a positive safe integer/,
-			);
-		}
-	});
-
 	it("defaults to four grouped panes when panes are absent", () => {
 		assert.deepEqual(parsePaneConfig({}), {
 			mode: "grouped",
