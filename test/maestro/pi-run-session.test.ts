@@ -502,6 +502,41 @@ async function makeFixture() {
 			);
 		writeFileSync(`${record.sessionFile}.exit`, JSON.stringify(result));
 	}
+	/**
+	 * weihung fork: resolve once the watch of `record`'s session directory
+	 * delivers events. macOS FSEvents starts a directory watch after fs.watch
+	 * returns and drops what changed before, so a sidecar written right after
+	 * supervise() would wait for the 4.8 s reconcile instead of its wake. A
+	 * probe entry shares that watch; its sidecar is rewritten until one write
+	 * wakes it.
+	 */
+	async function watching(record: PiRunRecord): Promise<void> {
+		const probe = join(dirname(record.sessionFile), "watch-probe.jsonl");
+		const watchers = wake.watcherCount;
+		let probed!: (live: boolean) => void;
+		const live = new Promise<boolean>((resolve) => {
+			probed = resolve;
+		});
+		const registration = wake.register(
+			probe,
+			() => probed(true),
+			() => assert.fail("watcher unexpectedly fell back"),
+		);
+		try {
+			assert.equal(wake.watcherCount, watchers, "the probe shares the watch");
+			for (let delivered = false; !delivered; ) {
+				writeFileSync(`${probe}.exit`, "{}");
+				// A write the watch started too late for is never redelivered: retry.
+				delivered = await Promise.race([
+					live,
+					new Promise<boolean>((resolve) => setTimeout(resolve, 100, false)),
+				]);
+			}
+		} finally {
+			registration.unregister();
+			rmSync(`${probe}.exit`, { force: true });
+		}
+	}
 	return {
 		dir,
 		provider,
@@ -510,6 +545,7 @@ async function makeFixture() {
 		session,
 		input,
 		complete,
+		watching,
 		commands,
 		settled,
 		latest: () => latest,
@@ -939,7 +975,10 @@ for (const suppress of [false, true])
 					0,
 					"suppression must eagerly retire Pi ownership",
 				);
-			} else f.complete(r);
+			} else {
+				await f.watching(r);
+				f.complete(r);
+			}
 			const deadline = Date.now() + 3000;
 			while (f.session.getTask(input.task.id)) {
 				assert.ok(Date.now() < deadline, "owned producer did not retire");
@@ -975,6 +1014,7 @@ for (const cancelled of [false, true])
 				controller.abort();
 				await assert.rejects(wait, /Aborted/);
 			}
+			await f.watching(r);
 			f.complete(r, { type: "error", errorMessage: "real provider evidence" });
 			if (!cancelled) {
 				const result = await wait;
@@ -1063,6 +1103,7 @@ test("cancelled resume callers still retire both owners on actual lazy-read reje
 		await assert.rejects(two, /Aborted/);
 		rmSync(path);
 		mkdirSync(path);
+		await f.watching(record);
 		f.complete(record);
 		const deadline = Date.now() + 3000;
 		while (f.session.getTask(task.id)) {
@@ -1126,6 +1167,7 @@ test("resume settlement reader is scoped to its run, not shared with concurrent 
 			h,
 			f.session.getTask("resume-control")!,
 		);
+		await f.watching(r);
 		f.complete(r);
 		const deadline = Date.now() + 3000;
 		while (!resumeIO) {
@@ -1718,6 +1760,7 @@ test("actual per-launch persistence overrides the initially captured persistent 
 		const h = await f.session.spawnPi(input);
 		const first = f.latest()!;
 		const wait = f.session.supervise(h, input.task);
+		await f.watching(first);
 		f.complete(first, {
 			type: "error",
 			errorMessage: "not persistent this launch",
@@ -1844,6 +1887,7 @@ test("public, control, logical specialist, generation and inbox namespaces remai
 		const h = await f.session.spawnPi(input);
 		const first = f.latest()!;
 		const wait = f.session.supervise(h, input.task);
+		await f.watching(first);
 		f.complete(first, { type: "error", errorMessage: "first ordinary fails" });
 		const deadline = Date.now() + 3000;
 		while (f.latest() === first) {

@@ -84,6 +84,44 @@ import { FileWakeRegistry } from "../maestro/core/wake.ts";
 import { getSubagentsConfigExamplePath } from "./helpers/config-example.ts";
 import "./isolated-agent-dir.ts";
 
+/**
+ * weihung fork: resolve once the registry's watch of `sessionFile`'s directory
+ * delivers events. macOS FSEvents starts a directory watch after fs.watch
+ * returns and drops what changed before, so a sidecar written at once can be
+ * missed for good. A probe entry shares that watch (no new fs.watch); its
+ * sidecar is rewritten until one write wakes it.
+ */
+async function watchDelivers(
+	registry: FileWakeRegistry,
+	sessionFile: string,
+): Promise<void> {
+	const probe = join(dirname(sessionFile), "watch-probe.jsonl");
+	const watchers = registry.watcherCount;
+	let probed!: (live: boolean) => void;
+	const live = new Promise<boolean>((resolve) => {
+		probed = resolve;
+	});
+	const registration = registry.register(
+		probe,
+		() => probed(true),
+		() => assert.fail("watcher unexpectedly fell back"),
+	);
+	try {
+		assert.equal(registry.watcherCount, watchers, "the probe shares the watch");
+		for (let delivered = false; !delivered; ) {
+			writeFileSync(`${probe}.exit`, "{}");
+			// A write the watch started too late for is never redelivered: retry.
+			delivered = await Promise.race([
+				live,
+				new Promise<boolean>((resolve) => setTimeout(resolve, 100, false)),
+			]);
+		}
+	} finally {
+		registration.unregister();
+		rmSync(`${probe}.exit`, { force: true });
+	}
+}
+
 function createTestDir(): string {
 	return realpathSync(mkdtempSync(join(tmpdir(), "subagents-test-")));
 }
@@ -1766,25 +1804,32 @@ describe("supervision", () => {
 		registry.close();
 	});
 
-	it("wakes on sidecar rename and releases registrations", async () => {
+	it("wakes on sidecar rename and releases registrations", {
+		timeout: 30_000,
+	}, async () => {
 		const dir = createTestDir();
 		const sessionFile = join(dir, "child.jsonl");
 		let wakes = 0;
+		let woken!: () => void;
+		const wake = new Promise<void>((resolve) => {
+			woken = resolve;
+		});
 		const registry = new FileWakeRegistry();
 		const registration = registry.register(
 			sessionFile,
 			() => {
 				wakes += 1;
+				woken();
 			},
 			() => assert.fail("watcher unexpectedly fell back"),
 		);
 		try {
+			await watchDelivers(registry, sessionFile);
+			assert.equal(wakes, 0, "the probe wakes only its own entry");
 			const temporary = `${sessionFile}.exit.tmp`;
 			writeFileSync(temporary, "{}");
 			renameSync(temporary, `${sessionFile}.exit`);
-			const deadline = Date.now() + 500;
-			while (wakes === 0 && Date.now() < deadline)
-				await new Promise((resolve) => setTimeout(resolve, 10));
+			await wake;
 			assert.equal(wakes, 1);
 			registration.unregister();
 			assert.equal(registry.watcherCount, 0);

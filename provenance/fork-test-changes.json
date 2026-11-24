@@ -111,5 +111,50 @@
 		"destination": "test/maestro/audit-git-environment-tools.test.ts",
 		"title": "host Git ignores poisoned repository while preserving linked checkout, includes and hooks",
 		"reason": "weihung fork: cleanup resolveSource and preserve run Git asynchronously and return promises"
+	},
+	{
+		"destination": "test/core-monolith.test.ts",
+		"title": "wakes on sidecar rename and releases registrations",
+		"reason": "weihung fork: wait until the directory watch delivers before writing a sidecar (macOS FSEvents starts a watch after fs.watch returns and drops earlier changes)"
+	},
+	{
+		"destination": "test/maestro/supervision-wake.test.ts",
+		"title": "parked wake wait observes a sidecar written after the registration reconcile",
+		"reason": "weihung fork: wait until the directory watch delivers before writing a sidecar (macOS FSEvents starts a watch after fs.watch returns and drops earlier changes)"
+	},
+	{
+		"destination": "test/maestro/pi-run-session.test.ts",
+		"title": "async function makeFixture(",
+		"reason": "weihung fork: the fixture offers watching(record), which resolves once the session directory watch delivers (macOS FSEvents starts a watch after fs.watch returns and drops earlier changes)"
+	},
+	{
+		"destination": "test/maestro/pi-run-session.test.ts",
+		"title": "all cancelled callers retire Pi auxiliary entries after",
+		"reason": "weihung fork: wait until the directory watch delivers before writing a sidecar (macOS FSEvents starts a watch after fs.watch returns and drops earlier changes)"
+	},
+	{
+		"destination": "test/maestro/pi-run-session.test.ts",
+		"title": "post-evidence finalization I/O failure",
+		"reason": "weihung fork: wait until the directory watch delivers before writing a sidecar (macOS FSEvents starts a watch after fs.watch returns and drops earlier changes)"
+	},
+	{
+		"destination": "test/maestro/pi-run-session.test.ts",
+		"title": "cancelled resume callers still retire both owners on actual lazy-read rejection without getters",
+		"reason": "weihung fork: wait until the directory watch delivers before writing a sidecar (macOS FSEvents starts a watch after fs.watch returns and drops earlier changes)"
+	},
+	{
+		"destination": "test/maestro/pi-run-session.test.ts",
+		"title": "resume settlement reader is scoped to its run, not shared with concurrent ordinary or persistent I/O",
+		"reason": "weihung fork: wait until the directory watch delivers before writing a sidecar (macOS FSEvents starts a watch after fs.watch returns and drops earlier changes)"
+	},
+	{
+		"destination": "test/maestro/pi-run-session.test.ts",
+		"title": "actual per-launch persistence overrides the initially captured persistent role default",
+		"reason": "weihung fork: wait until the directory watch delivers before writing a sidecar (macOS FSEvents starts a watch after fs.watch returns and drops earlier changes)"
+	},
+	{
+		"destination": "test/maestro/pi-run-session.test.ts",
+		"title": "public, control, logical specialist, generation and inbox namespaces remain distinct across actual retries",
+		"reason": "weihung fork: wait until the directory watch delivers before writing a sidecar (macOS FSEvents starts a watch after fs.watch returns and drops earlier changes)"
 	}
 ]

@@ -16,8 +16,10 @@ const WIN32_SKIP =
 
 test("parked wake wait observes a sidecar written after the registration reconcile", {
 	skip: WIN32_SKIP,
+	timeout: 30_000,
 }, async () => {
 	const dir = mkdtempSync(join(tmpdir(), "wake-parked-"));
+	const registry = new FileWakeRegistry();
 	const supervisor = new SupervisionCoordinator(
 		async () => ({
 			complete: true,
@@ -28,10 +30,36 @@ test("parked wake wait observes a sidecar written after the registration reconci
 			agentStatus: "idle",
 			observedAt: Date.now(),
 		}),
+		false,
+		registry,
 	);
 	try {
 		const sessionFile = join(dir, "child.jsonl");
+		// weihung fork: macOS FSEvents starts a directory watch after fs.watch
+		// returns and drops what changed before, so the sidecar below could be
+		// missed for good. A probe entry opens the directory's watch first; its
+		// sidecar is rewritten until one write wakes it, then the child shares
+		// the live watch.
+		const probe = join(dir, "watch-probe.jsonl");
+		let probed!: (live: boolean) => void;
+		const live = new Promise<boolean>((resolve) => {
+			probed = resolve;
+		});
+		const probeRegistration = registry.register(
+			probe,
+			() => probed(true),
+			() => assert.fail("watcher unexpectedly fell back"),
+		);
+		for (let delivered = false; !delivered; ) {
+			writeFileSync(`${probe}.exit`, "{}");
+			// A write the watch started too late for is never redelivered: retry.
+			delivered = await Promise.race([
+				live,
+				new Promise<boolean>((resolve) => setTimeout(resolve, 100, false)),
+			]);
+		}
 		const registration = supervisor.register(sessionFile, "child");
+		probeRegistration.unregister();
 		assert.equal(supervisor.diagnostics().mode, "wake+batch");
 		assert.equal(supervisor.diagnostics().watcherCount, 1);
 		// Registration queues one reconcile. Consuming it leaves the next wait
