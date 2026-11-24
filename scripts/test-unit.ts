@@ -42,6 +42,22 @@ interface PlatformSkip {
 	skip: true | string;
 	reason: string;
 }
+/**
+ * weihung fork: the per-file line floor on a host where part of an original
+ * file cannot run (Linux-only /proc code). The Linux baseline floor stays the
+ * floor everywhere else.
+ */
+interface PlatformCoverageFloor {
+	platform: NodeJS.Platform;
+	source: string;
+	floor: number;
+	reason: string;
+}
+/** weihung fork: what a non-Linux host measures differently from the baseline. */
+interface PlatformRecord {
+	skips: PlatformSkip[];
+	coverage_floors: PlatformCoverageFloor[];
+}
 interface CoverageFile {
 	path: string;
 	lines: { line: number; count: number }[];
@@ -268,14 +284,18 @@ try {
 		);
 	// weihung fork: each recorded platform skip must be observed exactly as
 	// recorded (a stale or changed record fails); only it compares unskipped.
-	const platformPath = new URL(
-		"../provenance/platform-skips.json",
-		import.meta.url,
-	);
-	const platformSkips: PlatformSkip[] = existsSync(platformPath)
-		? JSON.parse(readFileSync(platformPath, "utf8"))
-		: [];
-	for (const entry of platformSkips) {
+	let platform: PlatformRecord;
+	try {
+		platform = JSON.parse(
+			readFileSync(
+				new URL("../provenance/platform-record.json", import.meta.url),
+				"utf8",
+			),
+		);
+	} catch (cause) {
+		throw new Error("Cannot read the platform record", { cause });
+	}
+	for (const entry of platform.skips) {
 		assert(
 			entry.reason && sourceFor.has(entry.destination),
 			`Platform skip needs a reason and a migrated destination: ${entry.destination}`,
@@ -387,6 +407,14 @@ try {
 			(f) => f.current_owner === "@nubl/maestro",
 		);
 		const failures: string[] = [];
+		for (const entry of platform.coverage_floors)
+			assert(
+				entry.reason &&
+					owned.some((original) => original.source === entry.source) &&
+					entry.floor > 0 &&
+					entry.floor < 100,
+				`Platform coverage floor needs a reason, an owned original file and a floor in (0, 100): ${entry.source}`,
+			);
 		const reports = owned.map((original) => {
 			const before = hits(baselineFiles, original.source);
 			assert.equal(before.size, original.total_lines, original.source);
@@ -420,7 +448,26 @@ try {
 				: (100 *
 						pairs.filter((pair) => (before.get(pair.source) ?? 0) > 0).length) /
 					pairs.length;
-			if (percent < floor)
+			// weihung fork: a recorded platform floor replaces the baseline floor only
+			// on its platform, only below it, and only while the file needs it.
+			const platformFloor = platform.coverage_floors.find(
+				(entry) =>
+					entry.platform === process.platform &&
+					entry.source === original.source,
+			);
+			if (platformFloor && platformFloor.floor >= floor)
+				failures.push(
+					`${original.source}: ${process.platform} floor ${platformFloor.floor}% is not below the original-line floor ${floor}%`,
+				);
+			else if (platformFloor && percent >= floor)
+				failures.push(
+					`${original.source}: stale ${process.platform} floor; ${percent}% meets the original-line floor ${floor}%`,
+				);
+			if (platformFloor && percent < platformFloor.floor)
+				failures.push(
+					`${original.source}: ${percent}% < ${process.platform} floor ${platformFloor.floor}%`,
+				);
+			else if (!platformFloor && percent < floor)
 				failures.push(
 					`${original.source}: ${percent}% < original-line floor ${floor}%`,
 				);
@@ -442,6 +489,7 @@ try {
 				total: pairs.length,
 				line: percent,
 				floor,
+				platform_floor: platformFloor?.floor,
 				original_file_floor: original.line,
 				mapped_lines: `${pairs.length}/${original.total_lines}`,
 				destination_line: (100 * destinationCovered) / destinationLines,

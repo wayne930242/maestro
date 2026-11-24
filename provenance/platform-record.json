@@ -1,0 +1,95 @@
+{
+	"skips": [
+		{
+			"platform": "darwin",
+			"destination": "test/launch.test.ts",
+			"titles": [
+				"Pi launch",
+				"provider Pi readiness accepts a Pi whose argv was rewritten to [\"pi\"]"
+			],
+			"skip": true,
+			"reason": "Linux-only: spawns a live process and reads its environment from /proc (linuxOnly)"
+		},
+		{
+			"platform": "darwin",
+			"destination": "test/launch.test.ts",
+			"titles": [
+				"Pi launch",
+				"provider Pi readiness never accepts another session's Pi"
+			],
+			"skip": true,
+			"reason": "Linux-only: spawns a live process and reads its environment from /proc (linuxOnly)"
+		},
+		{
+			"platform": "darwin",
+			"destination": "test/launch.test.ts",
+			"titles": [
+				"Pi launch",
+				"provider Pi readiness treats an unreadable environment as unproven without hiding a match"
+			],
+			"skip": true,
+			"reason": "Linux-only (and not as root): reads a live process environment from /proc"
+		},
+		{
+			"platform": "darwin",
+			"destination": "test/launch.test.ts",
+			"titles": [
+				"Pi launch",
+				"provider Pi readiness rejects each identity mismatch independently"
+			],
+			"skip": true,
+			"reason": "Linux-only: spawns a live process and reads its environment from /proc (linuxOnly)"
+		},
+		{
+			"platform": "darwin",
+			"destination": "test/maestro/process-cleanup.test.ts",
+			"titles": ["cleanupTestProcess accepts an unreaped zombie as exited"],
+			"skip": "zombie states are read from Linux /proc",
+			"reason": "Linux-only: zombie states are read from /proc"
+		},
+		{
+			"platform": "darwin",
+			"destination": "test/maestro/process-environment.test.ts",
+			"titles": [
+				"process environment",
+				"a live process's exec-time environment survives its title rewrite"
+			],
+			"skip": "Linux /proc only",
+			"reason": "Linux-only: reads /proc/<pid>/environ"
+		},
+		{
+			"platform": "darwin",
+			"destination": "test/worktree-cleanup-pi.test.ts",
+			"titles": [
+				"cleanup operating-system probes",
+				"detects a real node-MainThread process through /proc, not a runtime allowlist"
+			],
+			"skip": true,
+			"reason": "Linux-only: probes process cwd and command through /proc"
+		},
+		{
+			"platform": "darwin",
+			"destination": "test/worktree-cleanup-pi.test.ts",
+			"titles": [
+				"cleanup operating-system probes",
+				"blocks non-runtime holders but warns about unverifiable live process cwd"
+			],
+			"skip": true,
+			"reason": "Linux-only: probes process cwd and command through /proc"
+		}
+	],
+	"coverage_floors": [
+		{
+			"platform": "darwin",
+			"source": "maestro/adapters/pi/launch-operations.ts",
+			"floor": 89.5631067961165,
+			"reason": "Linux-only: waitForSurfacePiReady (and its waitForPiReady caller) runs only under the linuxOnly provider readiness cases, which read a live process environment from /proc"
+		},
+		{
+			"platform": "darwin",
+			"source": "maestro/adapters/pi/process-identity.ts",
+			"floor": 91.89189189189189,
+			"reason": "Linux-only: the /proc host, stat and environment readers sit behind process.platform checks and cannot run on darwin"
+		}
+	]
+}
