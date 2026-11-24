@@ -1,6 +1,26 @@
 [
 	{
 		"destination": "test/core-monolith.test.ts",
+		"title": "defaults to four grouped panes when panes are absent",
+		"reason": "Pane defaults now include the minimum split size."
+	},
+	{
+		"destination": "test/core-monolith.test.ts",
+		"title": "parses split mode and direction",
+		"reason": "Parsed split configuration includes the minimum size."
+	},
+	{
+		"destination": "test/core-monolith.test.ts",
+		"title": "loads a strict grouped capacity independently of persistent capacity",
+		"reason": "Parsed grouped configuration includes the minimum size."
+	},
+	{
+		"destination": "test/core-monolith.test.ts",
+		"title": "loads the shared example when local config is absent",
+		"reason": "Pane defaults from the shared example include the minimum size."
+	},
+	{
+		"destination": "test/core-monolith.test.ts",
 		"title": "returns normalized saved preferences and missing categories after atomic replacement",
 		"reason": "weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514)"
 	},

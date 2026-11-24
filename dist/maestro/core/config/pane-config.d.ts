@@ -1,9 +1,12 @@
 export type PaneMode = "grouped" | "tab" | "split";
 export type PaneDirection = "right" | "down";
+export declare const DEFAULT_MIN_SPLIT_COLS = 80;
 export interface PaneConfig {
     mode: PaneMode;
     direction: PaneDirection;
     maxPerTab: number;
+    /** Omitted by older programmatic hosts; configuration files always resolve this value. */
+    minSplitCols?: number;
 }
 type PaneCreator = (name: string, cwd?: string) => string;
 type SplitPaneCreator = (name: string, direction: PaneDirection, cwd?: string) => string;

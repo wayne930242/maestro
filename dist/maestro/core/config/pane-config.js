@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { isPlainObject, isString } from "./type-guards.js";
+export const DEFAULT_MIN_SPLIT_COLS = 80;
 function invalidPaneConfig(source, message) {
     throw new Error(`Invalid subagent pane config in ${source}: ${message}`);
 }
@@ -9,12 +10,20 @@ export function parsePaneConfig(rawConfig, source = "config.json") {
         invalidPaneConfig(source, "root must be an object");
     }
     if (!Object.hasOwn(rawConfig, "panes")) {
-        return { mode: "grouped", direction: "right", maxPerTab: 4 };
+        return {
+            mode: "grouped",
+            direction: "right",
+            maxPerTab: 4,
+            minSplitCols: DEFAULT_MIN_SPLIT_COLS,
+        };
     }
     if (!isPlainObject(rawConfig.panes)) {
         invalidPaneConfig(source, "panes must be an object");
     }
-    const unsupportedKeys = Object.keys(rawConfig.panes).filter((key) => key !== "mode" && key !== "direction" && key !== "maxPerTab");
+    const unsupportedKeys = Object.keys(rawConfig.panes).filter((key) => key !== "mode" &&
+        key !== "direction" &&
+        key !== "maxPerTab" &&
+        key !== "minSplitCols");
     if (unsupportedKeys.length > 0) {
         invalidPaneConfig(source, `panes has unsupported key(s): ${unsupportedKeys.join(", ")}`);
     }
@@ -43,7 +52,13 @@ export function parsePaneConfig(rawConfig, source = "config.json") {
     if (!Number.isSafeInteger(maxPerTab) || maxPerTab < 1) {
         invalidPaneConfig(source, "panes.maxPerTab must be a positive safe integer");
     }
-    return { mode, direction, maxPerTab };
+    const minSplitCols = Object.hasOwn(rawConfig.panes, "minSplitCols")
+        ? rawConfig.panes.minSplitCols
+        : DEFAULT_MIN_SPLIT_COLS;
+    if (!Number.isSafeInteger(minSplitCols) || minSplitCols < 1) {
+        invalidPaneConfig(source, "panes.minSplitCols must be a positive safe integer");
+    }
+    return { mode, direction, maxPerTab, minSplitCols };
 }
 function readPaneConfigFile(configPath, examplePath) {
     try {

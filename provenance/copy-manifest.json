@@ -39,7 +39,11 @@
 			"destination": "config.json.example",
 			"archive": "provenance/upstream/config.json.example",
 			"blob": "e185371e79b7ed4b63c2e394f57bc2d3b19f0920",
-			"classification": "split"
+			"classification": "split",
+			"owned_change": {
+				"reason": "Document the split size guard in the shipped pane configuration.",
+				"blob": "f9be591af1e42feaf083ccdd2f77a7c6e22fa5e4"
+			}
 		},
 		{
 			"kind": "copy",
@@ -323,7 +327,11 @@
 			"source": "maestro/core/config/pane-config.ts",
 			"destination": "maestro/core/config/pane-config.ts",
 			"blob": "0d4d2b91e588471c0e349e2ea4dae2a655b2445f",
-			"archive": "provenance/upstream/maestro/core/config/pane-config.ts"
+			"archive": "provenance/upstream/maestro/core/config/pane-config.ts",
+			"owned_change": {
+				"reason": "Parse the minimum remaining split size for terminal hosts.",
+				"blob": "97051388f084e724b3280a9e060a6a50691133a9"
+			}
 		},
 		{
 			"kind": "copy",

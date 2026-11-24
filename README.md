@@ -58,6 +58,10 @@ to the baseline hit rate on the same lines), not a global package threshold.
 See [the extraction plan](docs/plan/extraction.md) and
 [provenance records](provenance/README.md) for pins, coverage and later gates.
 
+## Pane configuration
+
+`panes.minSplitCols` sets the minimum space the terminal host should leave in the caller's pane after a split: columns for a right split, rows for a down split. It defaults to 80 and accepts positive safe integers. The legacy Herdr host uses grouped placement instead when it cannot confirm enough space.
+
 ## Publishing
 
 Releases publish to npm from GitHub Actions with npm trusted publishing (OIDC). No npm token is stored in this repository.

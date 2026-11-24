@@ -5,10 +5,14 @@ import { isPlainObject, isString } from "./type-guards.ts";
 export type PaneMode = "grouped" | "tab" | "split";
 export type PaneDirection = "right" | "down";
 
+export const DEFAULT_MIN_SPLIT_COLS = 80;
+
 export interface PaneConfig {
 	mode: PaneMode;
 	direction: PaneDirection;
 	maxPerTab: number;
+	/** Omitted by older programmatic hosts; configuration files always resolve this value. */
+	minSplitCols?: number;
 }
 
 type PaneCreator = (name: string, cwd?: string) => string;
@@ -36,14 +40,23 @@ export function parsePaneConfig(
 		invalidPaneConfig(source, "root must be an object");
 	}
 	if (!Object.hasOwn(rawConfig, "panes")) {
-		return { mode: "grouped", direction: "right", maxPerTab: 4 };
+		return {
+			mode: "grouped",
+			direction: "right",
+			maxPerTab: 4,
+			minSplitCols: DEFAULT_MIN_SPLIT_COLS,
+		};
 	}
 	if (!isPlainObject(rawConfig.panes)) {
 		invalidPaneConfig(source, "panes must be an object");
 	}
 
 	const unsupportedKeys = Object.keys(rawConfig.panes).filter(
-		(key) => key !== "mode" && key !== "direction" && key !== "maxPerTab",
+		(key) =>
+			key !== "mode" &&
+			key !== "direction" &&
+			key !== "maxPerTab" &&
+			key !== "minSplitCols",
 	);
 	if (unsupportedKeys.length > 0) {
 		invalidPaneConfig(
@@ -89,7 +102,16 @@ export function parsePaneConfig(
 			"panes.maxPerTab must be a positive safe integer",
 		);
 	}
-	return { mode, direction, maxPerTab };
+	const minSplitCols = Object.hasOwn(rawConfig.panes, "minSplitCols")
+		? rawConfig.panes.minSplitCols
+		: DEFAULT_MIN_SPLIT_COLS;
+	if (!Number.isSafeInteger(minSplitCols) || minSplitCols < 1) {
+		invalidPaneConfig(
+			source,
+			"panes.minSplitCols must be a positive safe integer",
+		);
+	}
+	return { mode, direction, maxPerTab, minSplitCols };
 }
 
 interface PaneConfigSource {
