@@ -60,7 +60,7 @@ See [the extraction plan](docs/plan/extraction.md) and
 
 ## Pane configuration
 
-`panes.minSplitCols` sets the minimum space the terminal host should leave in the caller's pane after a split: columns for a right split, rows for a down split. It defaults to 80 and accepts positive safe integers. The legacy Herdr host uses grouped placement instead when it cannot confirm enough space.
+`panes.minSplitCols` sets the minimum number of usable columns the caller keeps after a right split. It defaults to 80 and accepts positive safe integers. If the legacy Herdr host cannot confirm that width, it uses grouped placement instead. Down splits leave the width unchanged, so they do not use this setting.
 
 ## Publishing
 
