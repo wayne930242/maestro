@@ -458,6 +458,8 @@ function checkEntry(
 			ts.forEachChild(node, visit);
 		}
 		visit(parsed);
+		// weihung fork: the recorded change behind each changed selection.
+		const changedSelections = new Map<SourceRange, ForkTestChange>();
 		for (const range of [...entry.selections, ...entry.helpers]) {
 			assert(
 				range.start >= 0 &&
@@ -484,6 +486,7 @@ function checkEntry(
 				`Changed or missing test/helper body: ${entry.source}:${range.line ?? range.start} -> ${entry.destination}`,
 			);
 			usedForkChanges.add(forkChange);
+			changedSelections.set(range, forkChange);
 		}
 		if (entry.baseline_archive) {
 			const baselineBytes = readFileSync(resolve(root, entry.baseline_archive));
@@ -526,21 +529,33 @@ function checkEntry(
 				entry.selections.every((range) => !range.added),
 				`Added case without a baseline archive: ${entry.source}`,
 			);
-		if (entry.whole)
+		if (entry.whole) {
+			const actual = parsed.statements
+				.filter((n) => !ts.isImportDeclaration(n))
+				.map((n) => n.getText(parsed));
 			assert.deepEqual(
-				parsed.statements
-					.filter((n) => !ts.isImportDeclaration(n))
-					.map((n) => tokens(n.getText(parsed))),
-				entry.selections.map((range) =>
-					tokens(
+				actual.map(tokens),
+				entry.selections.map((range, index) => {
+					// weihung fork: a recorded case keeps its place in the file; only
+					// its body may differ. Every other statement stays the original's.
+					const change = changedSelections.get(range);
+					if (
+						change &&
+						caseHeader(actual[index] ?? "").includes(
+							change.renamed_to ?? change.title,
+						)
+					)
+						return tokens(actual[index]);
+					return tokens(
 						rewriteResourcePaths(
 							original.slice(range.start, range.end),
 							map.resource_mappings,
 						),
-					),
-				),
+					);
+				}),
 				`Changed whole-file test body: ${entry.source}`,
 			);
+		}
 	}
 }
 

@@ -81,6 +81,66 @@ test("test migration accepts only trivia changes, never changed assertions or li
 	);
 });
 
+test("weihung fork: a recorded case of a whole-file migration may change only its own body, in place", (t) => {
+	const root = mkdtempSync(join(tmpdir(), "maestro-fork-whole-"));
+	t.after(() => rmSync(root, { recursive: true, force: true }));
+	mkdirSync(join(root, "provenance"));
+	const header = 'import assert from "node:assert/strict";\n';
+	const kept = 'test("kept", () => { assert.equal(1, 1); });';
+	const changed = 'test("changed", () => { assert.equal(2, 2); });';
+	const original = `${header}${kept}\n${changed}`;
+	const blob = gitBlob(Buffer.from(original));
+	writeFileSync(join(root, "original.ts"), original);
+	writeFileSync(
+		join(root, "provenance/upstream-tree.json"),
+		JSON.stringify({
+			copy_sha: "fixture",
+			files: [{ path: "source.ts", blob }],
+		}),
+	);
+	writeFileSync(
+		join(root, "provenance/m2-test-map.json"),
+		JSON.stringify({
+			copy_sha: "fixture",
+			files: [
+				{
+					source: "source.ts",
+					destination: "migrated.ts",
+					archive: "original.ts",
+					blob,
+					whole: true,
+					selections: [kept, changed].map((text) => ({
+						start: original.indexOf(text),
+						end: original.indexOf(text) + text.length,
+					})),
+					helpers: [],
+				},
+			],
+		}),
+	);
+	const migrate = (...statements: string[]) =>
+		writeFileSync(join(root, "migrated.ts"), header + statements.join("\n"));
+	const forked = changed.replace("2, 2", "2, 3");
+	migrate(kept, forked);
+	assert.throws(() => checkTestMigration(root), /Changed or missing/);
+	writeFileSync(
+		join(root, "provenance/fork-test-changes.json"),
+		JSON.stringify([
+			{ destination: "migrated.ts", title: "changed", reason: "fixture" },
+		]),
+	);
+	assert.equal(checkTestMigration(root).files.length, 1);
+	// The record waives its own case only, at its own place in the file.
+	migrate(kept.replace("1, 1", "1, 2"), forked);
+	assert.throws(() => checkTestMigration(root), /Changed or missing/);
+	migrate(forked, kept);
+	assert.throws(() => checkTestMigration(root), /Changed whole-file/);
+	migrate(kept, forked, "const extra = 1;");
+	assert.throws(() => checkTestMigration(root), /Changed whole-file/);
+	migrate(kept, changed);
+	assert.throws(() => checkTestMigration(root), /Stale fork test change/);
+});
+
 test("the child entry closure rejects parent runtime, launch, provider and terminal imports", (t) => {
 	const root = mkdtempSync(join(tmpdir(), "maestro-child-closure-"));
 	t.after(() => rmSync(root, { recursive: true, force: true }));
