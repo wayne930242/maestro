@@ -238,8 +238,11 @@ test("a scoped resume pins the stored in-scope model and refuses an unrecorded o
 	}
 });
 
-test("process identity capture keeps retrying a failing pane query until its deadline", async () => {
+test("process identity capture keeps retrying a failing pane query until its deadline", async (t) => {
 	const { root } = scratch();
+	// A virtual clock: only the ticks below move the 60 ms window, so a loaded
+	// host cannot spend it before the first query is even issued.
+	t.mock.timers.enable({ apis: ["Date", "setTimeout"] });
 	try {
 		const file = join(root, "child.process.json");
 		writeProcessIdentityRecord(file, {
@@ -252,20 +255,32 @@ test("process identity capture keeps retrying a failing pane query until its dea
 			pidNamespace: "pid:[1]",
 		});
 		let queries = 0;
-		await assert.rejects(
-			captureSurfacePiProcessIdentity(
-				{
-					getProcessInfo: () => {
-						queries++;
-						throw new Error("pane query failed");
-					},
+		let settled = false;
+		const outcome = captureSurfacePiProcessIdentity(
+			{
+				getProcessInfo: () => {
+					queries++;
+					throw new Error("pane query failed");
 				},
-				"pane-1",
-				{ file, id: "child", sessionFile: join(root, "child.jsonl") },
-				{ timeoutMs: 60, intervalMs: 5 },
-			),
-			/pane query failed/,
-		);
+			},
+			"pane-1",
+			{ file, id: "child", sessionFile: join(root, "child.jsonl") },
+			{ timeoutMs: 60, intervalMs: 5 },
+		)
+			.then(
+				() => new Error("an unverifiable identity was captured"),
+				(error: Error) => error,
+			)
+			.finally(() => {
+				settled = true;
+			});
+		// Each turn lets the capture finish its query and schedule its next
+		// retry; each tick then moves the clock one retry interval.
+		while (!settled) {
+			await new Promise<void>((resolve) => setImmediate(resolve));
+			t.mock.timers.tick(5);
+		}
+		assert.match(String(await outcome), /pane query failed/);
 		assert(queries > 1, "a failed query is retried, never accepted");
 	} finally {
 		rmSync(root, { recursive: true, force: true });
