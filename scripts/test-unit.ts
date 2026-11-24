@@ -30,6 +30,18 @@ interface Identity {
 	todo: boolean | string;
 	titles?: string[];
 }
+/**
+ * weihung fork: a migrated Linux-only case that skips on another host. The
+ * identity baseline ran on Linux, so the case compares there as unskipped.
+ */
+interface PlatformSkip {
+	platform: NodeJS.Platform;
+	destination: string;
+	titles: string[];
+	/** The exact skip value the case reports on `platform`. */
+	skip: true | string;
+	reason: string;
+}
 interface CoverageFile {
 	path: string;
 	lines: { line: number; count: number }[];
@@ -254,6 +266,35 @@ try {
 						change.destination === event.file && change.renamed_to === title,
 				)?.title ?? title,
 		);
+	// weihung fork: each recorded platform skip must be observed exactly as
+	// recorded (a stale or changed record fails); only it compares unskipped.
+	const platformPath = new URL(
+		"../provenance/platform-skips.json",
+		import.meta.url,
+	);
+	const platformSkips: PlatformSkip[] = existsSync(platformPath)
+		? JSON.parse(readFileSync(platformPath, "utf8"))
+		: [];
+	for (const entry of platformSkips) {
+		assert(
+			entry.reason && sourceFor.has(entry.destination),
+			`Platform skip needs a reason and a migrated destination: ${entry.destination}`,
+		);
+		if (entry.platform !== process.platform) continue;
+		const matches = observed.filter(
+			(event) =>
+				event.kind !== "suite" &&
+				event.file === entry.destination &&
+				JSON.stringify(event.titles) === JSON.stringify(entry.titles) &&
+				event.skip === entry.skip,
+		);
+		assert.equal(
+			matches.length,
+			1,
+			`Stale platform skip: ${entry.platform} ${entry.destination} ${entry.titles.join(" > ")}`,
+		);
+		matches[0].skip = false;
+	}
 	const migrated = observed.filter(
 		(e) => e.kind !== "suite" && sourceFor.has(e.file),
 	);
