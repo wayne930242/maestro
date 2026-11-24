@@ -1,0 +1,94 @@
+[
+	{
+		"scopes": ["parent"],
+		"tool": "subagents_write_task_models",
+		"path": ["description"],
+		"op": "replace",
+		"from": "Supported categories: coding, review,",
+		"to": "Supported categories: coding, complex-coding, review,",
+		"reason": "weihung fork: complex-coding task category (maestro f013719, pi-herdr-agents fork 9e5b514)"
+	},
+	{
+		"scopes": ["parent"],
+		"tool": "subagents_write_task_models",
+		"path": [
+			"parameters",
+			"properties",
+			"tasks",
+			"properties",
+			"complex-coding"
+		],
+		"op": "add",
+		"value": {
+			"minItems": 1,
+			"description": "Complex or high-risk implementation workers",
+			"type": "array",
+			"items": { "minLength": 1, "type": "string" }
+		},
+		"reason": "weihung fork: complex-coding task category (maestro f013719, pi-herdr-agents fork 9e5b514)"
+	},
+	{
+		"scopes": ["parent"],
+		"tool": "subagents_write_task_models",
+		"path": [
+			"parameters",
+			"properties",
+			"tasksThinking",
+			"anyOf",
+			"0",
+			"properties",
+			"complex-coding"
+		],
+		"op": "add",
+		"value": {
+			"anyOf": [
+				{ "const": "off", "type": "string" },
+				{ "const": "minimal", "type": "string" },
+				{ "const": "low", "type": "string" },
+				{ "const": "medium", "type": "string" },
+				{ "const": "high", "type": "string" },
+				{ "const": "xhigh", "type": "string" },
+				{ "const": "max", "type": "string" }
+			]
+		},
+		"reason": "weihung fork: complex-coding task category (maestro f013719, pi-herdr-agents fork 9e5b514)"
+	},
+	{
+		"scopes": ["parent"],
+		"tool": "subagent",
+		"path": ["parameters", "properties", "solutionSpace"],
+		"op": "add",
+		"value": {
+			"description": "One or two sentences on how open-ended the work is, not the work itself: whether the fix or design is given, or which causes or designs remain open. The child receives it as PI_SUBAGENT_SOLUTION_SPACE, where an installed extension can choose the child's thinking level from it.",
+			"type": "string"
+		},
+		"reason": "weihung fork: solutionSpace reaches the child as PI_SUBAGENT_SOLUTION_SPACE (maestro a86759a, pi-herdr-agents fork 5170115)"
+	},
+	{
+		"scopes": ["parent"],
+		"tool": "subagent",
+		"path": ["parameters", "properties", "model", "description"],
+		"op": "replace",
+		"from": "Cross-family verification must not use this fallback.",
+		"to": "Cross-family verification must not use this fallback. Omitting uses the role's model, then the configured models.agents entry and models.default, then the parent model.",
+		"reason": "weihung fork: state how an omitted model resolves (maestro 05ecee8, pi-herdr-agents fork 7a8055c, 1a56ede)"
+	},
+	{
+		"scopes": ["parent"],
+		"tool": "subagent",
+		"path": ["parameters", "properties", "thinking", "description"],
+		"op": "replace",
+		"from": "and high+ for hard work.",
+		"to": "and high+ for hard work. Omitting uses task-category thinking, then the role's thinking, otherwise the parent level; an installed extension may set the child's level from solutionSpace instead.",
+		"reason": "weihung fork: state how an omitted thinking level resolves; name solutionSpace (maestro 05ecee8, pi-herdr-agents fork 7a8055c, 1a56ede)"
+	},
+	{
+		"scopes": ["parent", "child"],
+		"tool": "subagent_cancel",
+		"path": ["description"],
+		"op": "replace",
+		"from": "unconfirmed (still running; call again)",
+		"to": "unconfirmed (still running and settles by itself if its pane or process is later seen gone; call again to retry)",
+		"reason": "weihung fork: an unconfirmed cancel settles once its pane or process is seen gone (maestro ca85f63, pi-herdr-agents fork 4921564)"
+	}
+]

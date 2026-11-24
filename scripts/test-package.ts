@@ -7,6 +7,7 @@ import {
 	mkdtempSync,
 	readFileSync,
 	readdirSync,
+	realpathSync,
 	rmSync,
 	symlinkSync,
 	writeFileSync,
@@ -18,7 +19,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import ts from "typescript";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
-const fixture = mkdtempSync(join(tmpdir(), "maestro packed consumer "));
+// Real path: Node resolves modules (import.meta.url, the child entry) through
+// symlinks, so on macOS a /var/... TMPDIR would compare against /private/var/....
+const fixture = realpathSync(
+	mkdtempSync(join(tmpdir(), "maestro packed consumer ")),
+);
 // Never inherit operator Pi config, loader hooks, SDK account paths or credentials.
 const env = {
 	PATH: process.env.PATH,
@@ -286,6 +291,82 @@ await session.shutdown("quit");
 	);
 }
 
+/** JSON as parsed from the archived contract and the fork's delta list. */
+type Json = string | number | boolean | null | Json[] | JsonObject;
+interface JsonObject {
+	[key: string]: Json;
+}
+
+function isJsonObject(value: Json | undefined): value is JsonObject {
+	return value instanceof Object && !Array.isArray(value);
+}
+
+/**
+ * weihung fork: one reviewed difference between H1's archived contract and the
+ * fork's registrations. `replace` swaps exactly one occurrence of `from` in the
+ * string at `path`; `add` sets the key `path` ends with, absent from H1.
+ */
+interface ForkContractDelta {
+	scopes: ("parent" | "child")[];
+	tool: string;
+	path: string[];
+	op: "replace" | "add";
+	from?: string;
+	to?: string;
+	value?: Json;
+	reason: string;
+}
+
+/**
+ * Apply the fork's documented tool-schema deltas to a copy of H1's pinned
+ * tools for one scope. Every delta must apply exactly as recorded (a stale or
+ * mismatched record fails), and anything it does not name stays H1's pin.
+ */
+function withForkDeltas(
+	tools: JsonObject[],
+	scope: "parent" | "child",
+	deltas: ForkContractDelta[],
+): JsonObject[] {
+	const patched = structuredClone(tools);
+	for (const delta of deltas.filter((entry) => entry.scopes.includes(scope))) {
+		const label = `${scope} ${delta.tool} ${delta.path.join(".")}`;
+		let node: Json | undefined = patched.find(
+			(tool) => tool.name === delta.tool,
+		);
+		for (const key of delta.path.slice(0, -1))
+			node = Array.isArray(node)
+				? node[Number(key)]
+				: isJsonObject(node)
+					? node[key]
+					: undefined;
+		const key = delta.path.at(-1);
+		assert(
+			isJsonObject(node) && key !== undefined,
+			`Fork delta path is absent from H1: ${label}`,
+		);
+		if (delta.op === "add") {
+			assert(!(key in node), `Fork delta adds an H1 key: ${label}`);
+			assert(delta.value !== undefined, `Fork delta adds no value: ${label}`);
+			node[key] = delta.value;
+			continue;
+		}
+		assert.equal(delta.op, "replace", `Unknown fork delta op: ${label}`);
+		const { from, to } = delta;
+		const text = String(node[key]);
+		assert(
+			node[key] === text && from && to !== undefined,
+			`Fork delta replaces no string: ${label}`,
+		);
+		assert.equal(
+			text.split(from).length,
+			2,
+			`Fork delta text must occur once in H1: ${label}`,
+		);
+		node[key] = text.replace(from, () => to);
+	}
+	return patched;
+}
+
 function parseJson(text: string, what: string) {
 	try {
 		return JSON.parse(text);
@@ -297,7 +378,8 @@ function parseJson(text: string, what: string) {
 /**
  * M4: the installed createPiExtension (`@nubl/maestro/pi`) registers what the
  * source factory does, per load, in parent and child/deny-tool scopes; equals
- * H1's pinned host contract; resolves the shipped config example; and, with the
+ * H1's pinned host contract plus the fork's recorded tool-schema deltas
+ * (provenance/fork-h1-contract-deltas.json); resolves the shipped config example; and, with the
  * installed child entry, reproduces the frozen public tool-schema fixture.
  */
 function piFactory(consumer: string, installedEntry: string): void {
@@ -363,6 +445,16 @@ function piFactory(consumer: string, installedEntry: string): void {
 		),
 		"the archived H1 contract",
 	);
+	const forkDeltas: ForkContractDelta[] = parseJson(
+		readFileSync(join(root, "provenance/fork-h1-contract-deltas.json"), "utf8"),
+		"the fork's H1 contract deltas",
+	);
+	for (const delta of forkDeltas)
+		assert(
+			delta.scopes.length > 0 &&
+				delta.scopes.every((scope) => scope === "parent" || scope === "child"),
+			`Fork delta needs parent and/or child scopes: ${delta.tool}`,
+		);
 	for (const scope of ["parent", "child"] as const) {
 		const actual = fromPackage.scopes[scope];
 		assert.deepEqual(actual.testSurface, pinned[scope].testSurface);
@@ -375,7 +467,7 @@ function piFactory(consumer: string, installedEntry: string): void {
 					return rest;
 				},
 			),
-			pinned[scope].tools,
+			withForkDeltas(pinned[scope].tools, scope, forkDeltas),
 		);
 		const names = actual.tools.map((tool: { name: string }) => tool.name);
 		assert.equal(new Set(names).size, names.length, "one registration each");
@@ -426,7 +518,7 @@ process.stdout.write(JSON.stringify(snapshot) + "\\n", () => process.exit(0));
 		),
 	);
 	console.log(
-		"Installed createPiExtension: per-load registrations equal the source factory and H1's pinned parent/child/deny-tool contract (one registration each, host renderers only through the hook), each load re-reads config, the shipped config example resolves under dist/, and the installed factory plus child entry reproduce test/fixtures/tool-schema/current.json.",
+		"Installed createPiExtension: per-load registrations equal the source factory and H1's pinned parent/child/deny-tool contract plus the fork's recorded deltas (one registration each, host renderers only through the hook), each load re-reads config, the shipped config example resolves under dist/, and the installed factory plus child entry reproduce test/fixtures/tool-schema/current.json.",
 	);
 }
 
