@@ -456,6 +456,7 @@ function checkOutputFields(accept: AcceptOutcome | undefined): HostField[] {
 
 export interface SubagentResultDetails {
 	name: string;
+	item?: string;
 	task?: string;
 	agent?: string;
 	exitCode?: number;
@@ -477,6 +478,7 @@ export interface SubagentResultDetails {
 
 export interface SubagentPingDetails {
 	name: string;
+	item?: string;
 	/** The name the child wrote in its sidecar, when it differs from `name`. */
 	reportedName?: string;
 	message: string;

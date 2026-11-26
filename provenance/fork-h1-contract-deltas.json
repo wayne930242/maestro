@@ -56,6 +56,18 @@
 	{
 		"scopes": ["parent"],
 		"tool": "subagent",
+		"path": ["parameters", "properties", "item"],
+		"op": "add",
+		"value": {
+			"pattern": "^(?:t_[A-Za-z2-7]{10}|[0-9a-fA-F]{8}#[1-9][0-9]*)$",
+			"description": "Todo uid or <session8>#<id> this launch works on.",
+			"type": "string"
+		},
+		"reason": "weihung fork: subagent can link a launch to its caller's todo item."
+	},
+	{
+		"scopes": ["parent"],
+		"tool": "subagent",
 		"path": ["parameters", "properties", "solutionSpace"],
 		"op": "add",
 		"value": {

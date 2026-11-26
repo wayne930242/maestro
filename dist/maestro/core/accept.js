@@ -211,6 +211,8 @@ export function describeAcceptVerdict(outcome) {
                 : outcome.verdict;
     }
 }
+// A todo uid or the first eight hex digits of a Pi session id plus a local todo number.
+export const WORK_ITEM_PATTERN = /^(?:t_[A-Za-z2-7]{10}|[0-9a-fA-F]{8}#[1-9][0-9]*)$/;
 export const OUTCOME_LEDGER_FILE = "outcomes.jsonl";
 export function buildOutcomeLedgerLine(input) {
     const line = {
@@ -222,6 +224,12 @@ export function buildOutcomeLedgerLine(input) {
         outcome: input.outcome,
         verdict: input.accept?.verdict ?? "none",
     };
+    if (input.name)
+        line.name = input.name;
+    if (input.parent)
+        line.parent = input.parent;
+    if (input.item)
+        line.item = input.item;
     if (input.role)
         line.role = input.role;
     if (input.requestedModel) {

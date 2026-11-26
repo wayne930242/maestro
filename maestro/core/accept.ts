@@ -323,11 +323,18 @@ export function describeAcceptVerdict(
 	}
 }
 
+// A todo uid or the first eight hex digits of a Pi session id plus a local todo number.
+export const WORK_ITEM_PATTERN =
+	/^(?:t_[A-Za-z2-7]{10}|[0-9a-fA-F]{8}#[1-9][0-9]*)$/;
+
 /** One outcome-ledger line: never task text, check output, env, or the command. */
 export interface OutcomeLedgerLine {
 	v: 1;
 	at: string;
 	runId: string;
+	name?: string;
+	parent?: string;
+	item?: string;
 	attempt: number;
 	role?: string;
 	requestedModel?: string;
@@ -346,6 +353,9 @@ export const OUTCOME_LEDGER_FILE = "outcomes.jsonl";
 export function buildOutcomeLedgerLine(input: {
 	at: number;
 	runId: string;
+	name?: string;
+	parent?: string;
+	item?: string;
 	attempt: number;
 	role?: string;
 	requestedModel?: string;
@@ -364,6 +374,9 @@ export function buildOutcomeLedgerLine(input: {
 		outcome: input.outcome,
 		verdict: input.accept?.verdict ?? "none",
 	};
+	if (input.name) line.name = input.name;
+	if (input.parent) line.parent = input.parent;
+	if (input.item) line.item = input.item;
 	if (input.role) line.role = input.role;
 	if (input.requestedModel) {
 		line.requestedModel = input.requestedModel;

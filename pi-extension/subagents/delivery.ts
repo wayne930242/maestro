@@ -414,10 +414,12 @@ export function createDelivery({
 		running.lifecycle = markDelivery(running.lifecycle, "delivered");
 		runningSubagents.delete(running.id);
 		updateWidget();
+		const item = task.item !== undefined ? { item: task.item } : {};
 		const cancellation = result.run.cancellation;
 		if (cancellation) {
 			const details: SubagentResultDetails = {
 				name: running.name,
+				...item,
 				task: task.prompt,
 				exitCode: result.exitCode,
 				elapsed: result.elapsed,
@@ -444,6 +446,7 @@ export function createDelivery({
 			// The sidecar's name is child-written; headers use the parent-owned name.
 			const details: SubagentPingDetails = {
 				name: running.name,
+				...item,
 				message: result.ping.message,
 				sessionFile: result.sessionFile!,
 			};
@@ -483,6 +486,7 @@ export function createDelivery({
 				: result;
 			const details: SubagentResultDetails = {
 				name: running.name,
+				...item,
 				task: task.prompt,
 				exitCode: result.exitCode,
 				elapsed: result.elapsed,

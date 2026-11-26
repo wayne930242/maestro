@@ -2,7 +2,7 @@ import { encodeHostValue, HOST_ERROR_CHARS, HOST_PATH_CHARS, } from "../../maest
 import { Type } from "@sinclair/typebox";
 import { discoverAgentCatalog as discoverCoreAgentCatalog, ROLE_PACK_DISCOVERY_EVENT, } from "../../maestro/core/roles/discovery.js";
 import { THINKING_LEVELS } from "../../maestro/core/routing.js";
-import { ACCEPT_MAX_RETRIES, ACCEPT_MAX_TIMEOUT_SEC, } from "../../maestro/core/accept.js";
+import { ACCEPT_MAX_RETRIES, ACCEPT_MAX_TIMEOUT_SEC, WORK_ITEM_PATTERN, } from "../../maestro/core/accept.js";
 import { getAgentConfigDir } from "./config-path.js";
 const LAUNCH_ROSTER_RULE = "After the final launch, print a markdown table with the header row `| name | agent kind | role | model | worktree |`, the separator row `|---|---|---|---|---|`, and one row per child (worktree `none` when there is none), then use each name in prompts, handoffs, and results.";
 export function buildSubagentRoutingGuidelines(catalog, authenticatedTaskPreferences, options = {}) {
@@ -45,6 +45,10 @@ export const SubagentParams = Type.Object({
         description: "Exact authenticated provider/model-id, a comma-separated fallback list, or task:<category> as the whole value. Worktree launches take one model: a task: category uses its first candidate, and fallback lists are rejected. For ordinary review, prefer a different authenticated model family. When no other authenticated model family is available, ordinary review may use a same-family reviewer in a fresh standalone session. Disclose that this review is context-isolated, not cross-family independent. Cross-family verification must not use this fallback. Omitting uses the role's model, then the configured models.agents entry and models.default, then the parent model.",
     })),
     thinking: Type.Optional(ThinkingLevelSchema),
+    item: Type.Optional(Type.String({
+        pattern: WORK_ITEM_PATTERN.source,
+        description: "Todo uid or <session8>#<id> this launch works on.",
+    })),
     solutionSpace: Type.Optional(Type.String({
         description: "One or two sentences on how open-ended the work is, not the work itself: whether the fix or design is given, or which causes or designs remain open. The child receives it as PI_SUBAGENT_SOLUTION_SPACE, where an installed extension can choose the child's thinking level from it.",
     })),

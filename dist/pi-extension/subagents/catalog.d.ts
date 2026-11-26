@@ -12,6 +12,7 @@ export declare const SubagentParams: import("@sinclair/typebox").TObject<{
     systemPrompt: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     model: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     thinking: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TUnion<import("@sinclair/typebox").TLiteral<"off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max">[]>>;
+    item: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     solutionSpace: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     skills: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     tools: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;

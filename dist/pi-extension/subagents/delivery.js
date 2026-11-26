@@ -264,10 +264,12 @@ export function createDelivery({ runtime, updateWidget, startPersistentStopTimeo
         running.lifecycle = markDelivery(running.lifecycle, "delivered");
         runningSubagents.delete(running.id);
         updateWidget();
+        const item = task.item !== undefined ? { item: task.item } : {};
         const cancellation = result.run.cancellation;
         if (cancellation) {
             const details = {
                 name: running.name,
+                ...item,
                 task: task.prompt,
                 exitCode: result.exitCode,
                 elapsed: result.elapsed,
@@ -294,6 +296,7 @@ export function createDelivery({ runtime, updateWidget, startPersistentStopTimeo
             // The sidecar's name is child-written; headers use the parent-owned name.
             const details = {
                 name: running.name,
+                ...item,
                 message: result.ping.message,
                 sessionFile: result.sessionFile,
             };
@@ -332,6 +335,7 @@ export function createDelivery({ runtime, updateWidget, startPersistentStopTimeo
                 : result;
             const details = {
                 name: running.name,
+                ...item,
                 task: task.prompt,
                 exitCode: result.exitCode,
                 elapsed: result.elapsed,

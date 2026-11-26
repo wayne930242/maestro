@@ -18,6 +18,7 @@ import { THINKING_LEVELS } from "../../maestro/core/routing.ts";
 import {
 	ACCEPT_MAX_RETRIES,
 	ACCEPT_MAX_TIMEOUT_SEC,
+	WORK_ITEM_PATTERN,
 } from "../../maestro/core/accept.ts";
 import type { TaskPreferences } from "../../maestro/core/config/task-model-types.ts";
 import { getAgentConfigDir } from "./config-path.ts";
@@ -84,6 +85,12 @@ export const SubagentParams = Type.Object({
 		}),
 	),
 	thinking: Type.Optional(ThinkingLevelSchema),
+	item: Type.Optional(
+		Type.String({
+			pattern: WORK_ITEM_PATTERN.source,
+			description: "Todo uid or <session8>#<id> this launch works on.",
+		}),
+	),
 	solutionSpace: Type.Optional(
 		Type.String({
 			description:

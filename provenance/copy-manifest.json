@@ -51,7 +51,11 @@
 			"destination": "docs/delegation-outcome-contract.md",
 			"blob": "bfd79eba1b94d75c351594df4b0c8d4a85153618",
 			"archive": "provenance/upstream/docs/delegation-outcome-contract.md",
-			"classification": "split"
+			"classification": "split",
+			"owned_change": {
+				"reason": "weihung fork: document the optional work item and outcome row identifiers",
+				"blob": "7fef6a243116abd10b88a490ec52354b41475580"
+			}
 		},
 		{
 			"kind": "copy",
@@ -61,8 +65,8 @@
 			"archive": "provenance/upstream/docs/tools.md",
 			"classification": "split",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede) | weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514)",
-				"blob": "31aa59ef9824ec50cdadc1954261a81276f7db70"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede) | weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514) | weihung fork: document the optional work item and outcome row identifiers",
+				"blob": "f4b7d3d09e4a37ad7c98eee9e68b6d0868c82d14"
 			}
 		},
 		{
@@ -274,7 +278,11 @@
 			"source": "maestro/core/accept.ts",
 			"destination": "maestro/core/accept.ts",
 			"blob": "b88cf38fb774710f25c10ba31c1e0edb8d6c81a1",
-			"archive": "provenance/upstream/maestro/core/accept.ts"
+			"archive": "provenance/upstream/maestro/core/accept.ts",
+			"owned_change": {
+				"reason": "weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session",
+				"blob": "56f7ebe3a269fdc087402df8223d9f73e025a760"
+			}
 		},
 		{
 			"kind": "copy",
@@ -534,8 +542,8 @@
 			"blob": "8cd2d264f055d6e831ed6262c4b4e391375ea361",
 			"archive": "provenance/upstream/maestro/core/types.ts",
 			"owned_change": {
-				"reason": "#149: CompletionEvidence.exitOutput carries a child's last terminal lines when it fails before its session starts. | weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0)",
-				"blob": "1497144bc81a6305896d1936bc2c2a39c94cf7d0"
+				"reason": "#149: CompletionEvidence.exitOutput carries a child's last terminal lines when it fails before its session starts. | weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0) | weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session",
+				"blob": "997e7578e6c1ff843084acf98bcbaaa50c7ccacc"
 			}
 		},
 		{
@@ -617,8 +625,8 @@
 			"blob": "38ce85d8dfcc8bdb09efda9cca40c755a23f8eaf",
 			"archive": "provenance/upstream/maestro/runtime/pi-run-session-types.ts",
 			"owned_change": {
-				"reason": "weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0)",
-				"blob": "177ddee72395ae175132e33f443bf296386df48f"
+				"reason": "weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0) | weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session",
+				"blob": "cd7006aa7b9a32480a7164a32fb297676b81f26a"
 			}
 		},
 		{
@@ -629,8 +637,8 @@
 			"archive": "provenance/upstream/maestro/runtime/pi-run-session.ts",
 			"classification": "split",
 			"owned_change": {
-				"reason": "#149: the host summary of such an exit appends the relayed exitOutput. | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0) | weihung fork: launch under a kernel adopted across reload that passes no cancel signal (pi-herdr-agents fork 6f530b9)",
-				"blob": "93f89d6e14ebd6331a15ee091572f96bd70e39a8"
+				"reason": "#149: the host summary of such an exit appends the relayed exitOutput. | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0) | weihung fork: launch under a kernel adopted across reload that passes no cancel signal (pi-herdr-agents fork 6f530b9) | weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session",
+				"blob": "fdf4dc100bb1e3ec78a47c99918f5fa6f5a0dd25"
 			}
 		},
 		{
@@ -699,8 +707,8 @@
 			"blob": "8d1e996375c1d98443613cf7dce20211aa814650",
 			"archive": "provenance/upstream/pi-extension/subagents/catalog.ts",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede)",
-				"blob": "6ed1a56d8da0581eaa7bb5ed8f8958786e2f351c"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede) | weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session",
+				"blob": "0d78c17729ee88879ebf4946048e948bdc4ad4ce"
 			}
 		},
 		{
@@ -745,7 +753,11 @@
 			"source": "pi-extension/subagents/delivery.ts",
 			"destination": "pi-extension/subagents/delivery.ts",
 			"blob": "6f6b9abaa63abcb6443fbbc00a2d22a002d2b44a",
-			"archive": "provenance/upstream/pi-extension/subagents/delivery.ts"
+			"archive": "provenance/upstream/pi-extension/subagents/delivery.ts",
+			"owned_change": {
+				"reason": "weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session",
+				"blob": "541b981ffa0a95a3ac281db2b7890a2e5709b451"
+			}
 		},
 		{
 			"kind": "copy",
@@ -769,8 +781,8 @@
 			"blob": "dcb6c903a7ced7cf5e795fdac38b112baa795f41",
 			"archive": "provenance/upstream/pi-extension/subagents/launch.ts",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115)",
-				"blob": "91a0d48bda57e56c50a31511b0a92c8d9ab8323b"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session",
+				"blob": "b480b46dec164337919f4967a3be815f9716a7e9"
 			}
 		},
 		{
@@ -806,7 +818,11 @@
 			"source": "pi-extension/subagents/presentation.ts",
 			"destination": "pi-extension/subagents/presentation.ts",
 			"blob": "529179ef4077c7d32852aeb5d1d136032f59d4d6",
-			"archive": "provenance/upstream/pi-extension/subagents/presentation.ts"
+			"archive": "provenance/upstream/pi-extension/subagents/presentation.ts",
+			"owned_change": {
+				"reason": "weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session",
+				"blob": "9a1bcd1b977727e6ff9b86d3a7f567ff37a97618"
+			}
 		},
 		{
 			"kind": "copy",
@@ -866,8 +882,8 @@
 			"blob": "7720f5698f352b4ff909cadc8b09aa32ebe9dfd5",
 			"archive": "provenance/upstream/test/fixtures/tool-schema/current.json",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede) | weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514) | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0)",
-				"blob": "585f2d2eb42fab79e6ed15c544a7d3d6845f2994"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede) | weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514) | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0) | weihung fork: document the optional work item and outcome row identifiers",
+				"blob": "779b6bca901ce77fd5006ac0eabecb7130e8c308"
 			}
 		},
 		{

@@ -161,6 +161,7 @@ export interface PiRunRecord {
 export interface PiStartedMetadata {
 	id: string;
 	name: string;
+	item?: string;
 	task: string;
 	agent?: string;
 	sessionFile: string;

@@ -117,11 +117,15 @@ export declare function verdictFromCommand(result: AcceptCommandResult, spec: Ac
 export declare function skippedOutcome(spec: AcceptSpec, reason: string): AcceptOutcome;
 /** The verdict and its detail after `Check: `, for example `accepted (2 tries)`. */
 export declare function describeAcceptVerdict(outcome: AcceptOutcome | undefined): string;
+export declare const WORK_ITEM_PATTERN: RegExp;
 /** One outcome-ledger line: never task text, check output, env, or the command. */
 export interface OutcomeLedgerLine {
     v: 1;
     at: string;
     runId: string;
+    name?: string;
+    parent?: string;
+    item?: string;
     attempt: number;
     role?: string;
     requestedModel?: string;
@@ -138,6 +142,9 @@ export declare const OUTCOME_LEDGER_FILE = "outcomes.jsonl";
 export declare function buildOutcomeLedgerLine(input: {
     at: number;
     runId: string;
+    name?: string;
+    parent?: string;
+    item?: string;
     attempt: number;
     role?: string;
     requestedModel?: string;

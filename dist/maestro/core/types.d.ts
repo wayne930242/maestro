@@ -19,6 +19,8 @@ export interface WorktreeSpec {
 export interface Task {
     id: string;
     name: string;
+    /** Optional todo uid or session-prefixed task number from the caller. */
+    item?: string;
     /** Full task text handed to the agent. */
     prompt: string;
     /** Role name, resolved through the role-pack loader. */

@@ -104,13 +104,17 @@ export function createLaunchPlanner({
 			task: {
 				id: options.controlTaskId,
 				name: params.name,
+				...(params.item !== undefined && { item: params.item }),
 				prompt: params.task,
 				role: params.agent ?? "",
 				cwd: options.origin.cwd,
 				worktree: params.worktree ?? undefined,
 				accept: params.accept ? normalizeAcceptSpec(params.accept) : undefined,
 				requestedModel: params.model,
-				session: { mode: resolveEffectiveSessionMode(params, agentDefs) },
+				session: {
+					mode: resolveEffectiveSessionMode(params, agentDefs),
+					parentSessionId: snapshot.parent.sessionId,
+				},
 				behavior: {
 					skills: effectiveSkills
 						?.split(",")

@@ -21,6 +21,8 @@ import { DelegatedMarkers } from "./delegated-marker.js";
 import { createRunSession, } from "./run-session.js";
 import { createPiPersistentIO } from "./pi-persistent-io.js";
 import { appendOutcomeLedger, ledgerOutcome, outcomeLedgerFile, runParentAcceptCheck, } from "./accept-recheck.js";
+import { WORK_ITEM_PATTERN } from "../core/accept.js";
+import { isString } from "../core/config/type-guards.js";
 import { runAcceptCommand } from "../adapters/pi/accept-runner.js";
 import { terminateAcceptChecks, } from "../adapters/pi/accept-groups.js";
 // pi-herdr-agents extension; no owning session required
@@ -207,7 +209,7 @@ export function createDefaultRunSession(options, previous) {
                         const owner = adapter(snapshot);
                         const handle = await owner.resume(resumeOptions);
                         task.cwd = handle.cwd;
-                        return acquired(task, owner, handle, [], [], undefined, before.length, acquisition.suppressed);
+                        return acquired(task, snapshot.parent.sessionId, owner, handle, [], [], undefined, before.length, acquisition.suppressed);
                     }
                     finally {
                         state.pending.delete(acquisition);
@@ -389,13 +391,14 @@ export function createDefaultRunSession(options, previous) {
             },
         });
     }
-    function acquired(task, owner, handle, attempts, failures, warning, cursor, suppressed = false) {
+    function acquired(task, parent, owner, handle, attempts, failures, warning, cursor, suppressed = false) {
         const child = owner.getRunningChild(handle);
         const entry = {
             record: child,
             started: {
                 id: child.id,
                 name: child.name,
+                ...(task.item !== undefined && { item: task.item }),
                 task: child.task,
                 agent: child.agent,
                 sessionFile: child.sessionFile,
@@ -575,6 +578,9 @@ export function createDefaultRunSession(options, previous) {
                     appendOutcomeLedger(outcomeLedgerFile(state.options.configDir), {
                         at,
                         runId: child.id,
+                        name: task.name,
+                        parent,
+                        item: task.item,
                         attempt: Math.max(1, attempts.length),
                         role: child.agent,
                         requestedModel: task.requestedModel ?? child.runtimePlan?.requestedModel,
@@ -597,6 +603,12 @@ export function createDefaultRunSession(options, previous) {
         };
     }
     function prepare(input, snapshot) {
+        const item = input.task.item;
+        if (item !== undefined &&
+            (!isString(item) || !WORK_ITEM_PATTERN.test(item)))
+            throw new Error("Invalid work item: expected a todo uid or <session8>#<id>.");
+        // A fallback may prepare from a replacement session; the launch still belongs to its caller.
+        let parent = input.task.session?.parentSessionId ?? snapshot?.parent.sessionId;
         const attempts = [];
         const failures = [];
         let publicId;
@@ -631,6 +643,7 @@ export function createDefaultRunSession(options, previous) {
                     // changed since. Re-check it against this attempt's snapshot, which
                     // prepareAttempt rebuilds from the live parent for every attempt.
                     assertModelInScope(plan.model, current.snapshot.modelRegistry);
+                    parent ??= current.snapshot.parent.sessionId;
                     const owner = adapter(current.snapshot);
                     spawning = true;
                     const handle = await owner.spawn({
@@ -660,7 +673,7 @@ export function createDefaultRunSession(options, previous) {
                     });
                     publicId = handle.id;
                     logicalId ??= current.identity.logicalId;
-                    return acquired(input.task, owner, handle, attempts, failures, input.warning, undefined, acquisition.suppressed);
+                    return acquired(input.task, parent, owner, handle, attempts, failures, input.warning, undefined, acquisition.suppressed);
                 }
                 catch (error) {
                     if (cancelled.aborted && !spawning) {
