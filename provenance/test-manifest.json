@@ -1148,6 +1148,7 @@
 		"test/config-defaults.test.ts",
 		"test/maestro/exit-output.test.ts",
 		"test/fork/work-item.test.ts",
+		"test/fork/build-info.test.ts",
 		"test/fork/solution-space.test.ts",
 		"test/fork/routing-guidelines.test.ts",
 		"test/fork/complex-coding.test.ts",

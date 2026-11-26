@@ -11,4 +11,5 @@ export type {
 	PiPresentationHooks,
 	PiToolRenderers,
 } from "../pi-extension/subagents/presentation-hooks.ts";
+export { type MaestroBuildInfo, maestroBuildInfo } from "./build-info.ts";
 export type { HostSurfaceBinding } from "./runtime/host-surface-binding.ts";

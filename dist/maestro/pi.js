@@ -4,4 +4,5 @@
  * package registers nothing by itself and discovers no provider.
  */
 export { createPiExtension, } from "../pi-extension/subagents/extension.js";
+export { maestroBuildInfo } from "./build-info.js";
 //# sourceMappingURL=pi.js.map
