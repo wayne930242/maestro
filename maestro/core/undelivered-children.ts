@@ -1,3 +1,5 @@
+import { projectTrackedRuns, type TrackedRunRow } from "./tracked-runs.ts";
+
 /**
  * The process-local slot that holds this process's running-subagent registry.
  * The subagents extension owns and writes it; the child protocol extension
@@ -5,13 +7,8 @@
  */
 export const SUBAGENT_RUNTIME_KEY = Symbol.for("pi-subagents/runtime");
 
-interface RegistryRow {
-	persistent?: boolean;
-	lifecycle?: { delivery?: string };
-}
-
 interface RuntimeSlot {
-	runningSubagents?: ReadonlyMap<string, RegistryRow>;
+	runningSubagents?: ReadonlyMap<string, TrackedRunRow>;
 }
 
 function readRuntimeSlot(): RuntimeSlot | undefined {
@@ -30,14 +27,13 @@ function readRuntimeSlot(): RuntimeSlot | undefined {
  * Ordinary completion removes a row just before it sends the result steer, so
  * a row that is still present has not been delivered. A suppressed row will
  * never be delivered and does not count. Persistent specialists stay in the
- * registry by design until they are stopped, so they never count.
+ * registry by design until they are stopped, so they never count. It reads
+ * the same projection the `pi-herdr-agents:runs:v1` probe answers.
  */
 export function hasUndeliveredChildren(
 	slot: RuntimeSlot | undefined = readRuntimeSlot(),
 ): boolean {
-	for (const row of slot?.runningSubagents?.values() ?? []) {
-		if (row.persistent) continue;
-		if ((row.lifecycle?.delivery ?? "pending") === "pending") return true;
-	}
-	return false;
+	return projectTrackedRuns(slot?.runningSubagents).runs.some(
+		(run) => !run.persistent && run.delivery === "pending",
+	);
 }

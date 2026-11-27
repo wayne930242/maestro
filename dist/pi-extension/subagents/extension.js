@@ -16,6 +16,7 @@ import { loadGuidelinesConfig } from "../../maestro/core/config/guidelines-confi
 import { loadStatusConfig } from "../../maestro/core/status.js";
 import { markDelivery } from "../../maestro/core/lifecycle.js";
 import { CHILD_BUSY_CHANNEL, } from "../../maestro/core/child-busy.js";
+import { TRACKED_RUNS_CHANNEL, projectTrackedRuns, } from "../../maestro/core/tracked-runs.js";
 import { WIDGET_INTERVAL_KEY, STATUS_INTERVAL_KEY, RUNTIME_KEY, readGlobalSlot, writeGlobalSlot, hasWorkingSubagents, shouldDeliverSubagentCompletion, selectCompletionApi, bindLiveApi, releaseHeldDeliveries, } from "./state.js";
 import { buildSubagentRoutingGuidelines, resolveDenyTools, discoverAgentCatalog, resolveEffectiveSessionMode, resolveLaunchBehavior, resolveEffectiveAutoExit, resolveEffectiveInteractive, loadAgentDefaults, } from "./catalog.js";
 import { sendSubagentResult, resolveResultPresentation, } from "./presentation.js";
@@ -279,9 +280,17 @@ export function createPiExtension(hostOptions) {
             if (probe && hasWorkingSubagents(runningSubagents.values()))
                 probe.busy = true;
         });
+        // Other in-process extensions read the runs this owner tracks now.
+        const stopTrackedRuns = pi.events.on(TRACKED_RUNS_CHANNEL, (raw) => {
+            // SAFETY: the channel's contract is a TrackedRunsProbe (readTrackedRuns).
+            const probe = raw;
+            if (probe)
+                probe.snapshot = projectTrackedRuns(runningSubagents);
+        });
         // Clean up on session shutdown
         pi.on("session_shutdown", async (event, _ctx) => {
             stopChildBusy();
+            stopTrackedRuns();
             stopRefresh();
             // Pi invalidates this context and API once shutdown returns. Watchers that
             // survive a reload must neither read the context nor send through the API;

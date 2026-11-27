@@ -65,8 +65,8 @@
 			"archive": "provenance/upstream/docs/tools.md",
 			"classification": "split",
 			"owned_change": {
-				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede) | weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514) | weihung fork: document the optional work item and outcome row identifiers",
-				"blob": "f4b7d3d09e4a37ad7c98eee9e68b6d0868c82d14"
+				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede) | weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514) | weihung fork: document the optional work item and outcome row identifiers | Tracked-run snapshot: a \"Tracked-run snapshot (pi-herdr-agents:runs:v1)\" section after the PI_SUBAGENT_ID hint documents the probe, its fields and its reload gap.",
+				"blob": "f35cb67a4c618eacd47120effac8a03a3810c999"
 			}
 		},
 		{
@@ -536,6 +536,11 @@
 			"archive": "provenance/upstream/maestro/core/surface-provider.ts"
 		},
 		{
+			"kind": "new",
+			"destination": "maestro/core/tracked-runs.ts",
+			"reason": "Tracked-run snapshot (post-H2, Maestro-owned): the pi-herdr-agents:runs:v1 channel, its versioned DTOs, the registry projection that the probe answers and the auto-exit guard reads, and readTrackedRuns for emitters."
+		},
+		{
 			"kind": "copy",
 			"source": "maestro/core/types.ts",
 			"destination": "maestro/core/types.ts",
@@ -551,7 +556,11 @@
 			"source": "maestro/core/undelivered-children.ts",
 			"destination": "maestro/core/undelivered-children.ts",
 			"blob": "4cd823eb6593cf0ff855470a37881894c690a56c",
-			"archive": "provenance/upstream/maestro/core/undelivered-children.ts"
+			"archive": "provenance/upstream/maestro/core/undelivered-children.ts",
+			"owned_change": {
+				"reason": "Tracked-run snapshot (pi-herdr-agents:runs:v1): hasUndeliveredChildren reads projectTrackedRuns (maestro/core/tracked-runs.ts), the projection the probe answers; the registry row type moved there as TrackedRunRow. Behaviour unchanged: an ordinary row whose delivery is pending (or absent) counts; persistent and suppressed rows do not.",
+				"blob": "39a0c5709ed675bdbac4cb9ea3b4212b7637f8ca"
+			}
 		},
 		{
 			"kind": "copy",
@@ -764,7 +773,11 @@
 			"source": "pi-extension/subagents/extension.ts",
 			"destination": "pi-extension/subagents/extension.ts",
 			"blob": "eb0f5142908b4dedf0f158b455cde6954ea5a76e",
-			"archive": "provenance/upstream/pi-extension/subagents/extension.ts"
+			"archive": "provenance/upstream/pi-extension/subagents/extension.ts",
+			"owned_change": {
+				"reason": "Tracked-run snapshot: the subagents extension answers the synchronous pi-herdr-agents:runs:v1 probe with projectTrackedRuns(runningSubagents), registered beside the child-busy listener and removed at session_shutdown like it.",
+				"blob": "9e85b53df3636c933c29d5a1c00044077971229e"
+			}
 		},
 		{
 			"kind": "copy",

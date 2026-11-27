@@ -198,6 +198,11 @@
 			"import": "./dist/maestro/core/surface-provider.js",
 			"default": "./dist/maestro/core/surface-provider.js"
 		},
+		"./core/tracked-runs": {
+			"types": "./dist/maestro/core/tracked-runs.d.ts",
+			"import": "./dist/maestro/core/tracked-runs.js",
+			"default": "./dist/maestro/core/tracked-runs.js"
+		},
 		"./core/types": {
 			"types": "./dist/maestro/core/types.d.ts",
 			"import": "./dist/maestro/core/types.js",
