@@ -71,7 +71,7 @@
 			"classification": "split",
 			"owned_change": {
 				"reason": "weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: routing guidelines state how an omitted model and thinking resolve and name solutionSpace as a reason to omit thinking on task: launches (pi-herdr-agents fork 7a8055c, 1a56ede) | weihung fork: complex-coding task category (pi-herdr-agents fork 9e5b514) | weihung fork: document the optional work item and outcome row identifiers | Tracked-run snapshot: a \"Tracked-run snapshot (pi-herdr-agents:runs:v1)\" section after the PI_SUBAGENT_ID hint documents the probe, its fields and its reload gap.",
-				"blob": "f35cb67a4c618eacd47120effac8a03a3810c999"
+				"blob": "35403b9f2986c7236d276acfa819097a5cbd5cca"
 			}
 		},
 		{
