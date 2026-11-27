@@ -98,6 +98,14 @@ export declare class PiHarnessAdapter implements HarnessAdapter {
     sendInput(handle: AgentHandle, text: string): Promise<void>;
     awaitCompletion(handle: AgentHandle, signal: AbortSignal): Promise<CompletionEvidence>;
     /**
+     * The shared pane list proves presence but carries no Herdr agent status.
+     * Until the child's turn is known to be waiting, read that status from its
+     * own pane, so a child that ended its turn (done, idle) or opened a dialog
+     * (blocked) stops projecting as active. Only a present reading replaces
+     * the epoch's evidence: presence and absence stay the coordinator's.
+     */
+    private inspectPaneStatus;
+    /**
      * A child that failed before its session started has no transcript to
      * explain it; relay the terminal's last lines instead (#149).
      */

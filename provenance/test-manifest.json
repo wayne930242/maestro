@@ -1165,7 +1165,8 @@
 		"test/fork/worktree-cleanup-review-fixes.test.ts",
 		"test/fork/pane-min-split-cols.test.ts",
 		"test/fork/session-policy-fields.test.ts",
-		"test/maestro/tracked-runs.test.ts"
+		"test/maestro/tracked-runs.test.ts",
+		"test/fork/live-pane-status.test.ts"
 	],
 	"identity_ledger": "baseline/test-identities.json.gz",
 	"identity_capture": "evidence/baseline-final/baseline.jsonl",

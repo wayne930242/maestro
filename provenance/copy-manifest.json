@@ -231,8 +231,8 @@
 			"blob": "b329ef6e037d3f9874d1999a616b451fbb210633",
 			"archive": "provenance/upstream/maestro/adapters/pi/pi-harness-adapter.ts",
 			"owned_change": {
-				"reason": "#149: a non-zero exit with no errorMessage and no session messages reads the terminal tail into exitOutput, the read bounded by EXIT_OUTPUT_READ_TIMEOUT_MS. | weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0) | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0)",
-				"blob": "c59dc0010da62f3afaafeaba226c2e1abd836ab8"
+				"reason": "#149: a non-zero exit with no errorMessage and no session messages reads the terminal tail into exitOutput, the read bounded by EXIT_OUTPUT_READ_TIMEOUT_MS. | weihung fork: solutionSpace subagent param reaches the child as PI_SUBAGENT_SOLUTION_SPACE (pi-herdr-agents fork 5170115) | weihung fork: capture a worktree child's process identity on macOS (ps/sysctl probe chosen by platform; a restarted capture reports the earlier failure; transient host reads retried) (pi-herdr-agents fork 8921a55, ec9d0d0) | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0) | weihung fork: a live child's Herdr status reaches its lifecycle; done/idle projects waiting, blocked projects blocked, and without Herdr status Pi's ended turn projects waiting",
+				"blob": "310f63c1627bf63cf2c968071e0b558fba47a6a2"
 			}
 		},
 		{
@@ -457,7 +457,11 @@
 			"source": "maestro/core/lifecycle.ts",
 			"destination": "maestro/core/lifecycle.ts",
 			"blob": "d8633668dae77106dd4607cce6f94e3036735458",
-			"archive": "provenance/upstream/maestro/core/lifecycle.ts"
+			"archive": "provenance/upstream/maestro/core/lifecycle.ts",
+			"owned_change": {
+				"reason": "weihung fork: a live child's Herdr status reaches its lifecycle; done/idle projects waiting, blocked projects blocked, and without Herdr status Pi's ended turn projects waiting",
+				"blob": "ff8820c29c1244482a33c3eb0284e985e1309524"
+			}
 		},
 		{
 			"kind": "copy",

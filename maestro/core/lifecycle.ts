@@ -240,15 +240,46 @@ export function observeActivity(
 		return { ...lifecycle, activityHealth };
 	}
 
+	// Herdr status is unknown until a pane inspection reports one, and stays
+	// unknown on Herdr Core and in panes without agent detection.
+	const withoutHerdrStatus =
+		lifecycle.pane.kind === "unknown" ||
+		lifecycle.pane.kind === "read-error" ||
+		(lifecycle.pane.kind === "present" &&
+			lifecycle.pane.agentStatus === "unknown");
+
 	if (!detail) {
 		// Reading succeeded but no enrichable detail; clear any stale label.
+		const activity = read.activity;
+		const fresh =
+			lifecycle.lastActivitySequence == null ||
+			activity.sequence >= lifecycle.lastActivitySequence;
+		// Pi's waiting or done phase follows an ended turn: the child has worked.
+		const turnEnded =
+			fresh && (activity.phase === "waiting" || activity.phase === "done");
+		let turn = lifecycle.turn;
+		// Without Herdr status, Pi's ended turn ends the fallback active turn too.
+		// Herdr status, a blocked turn and an interrupt keep their precedence.
+		if (
+			turnEnded &&
+			withoutHerdrStatus &&
+			(turn.kind === "active" ||
+				turn.kind === "starting" ||
+				turn.kind === "unknown")
+		)
+			turn = {
+				kind: "waiting",
+				startedAt: activity.waitingSince ?? activity.updatedAt,
+			};
 		return {
 			...lifecycle,
+			turn,
+			hasWorked: lifecycle.hasWorked || turnEnded,
 			activityDetail: null,
 			activityHealth: { kind: "healthy", observedAt },
 			lastActivitySequence: Math.max(
 				lifecycle.lastActivitySequence ?? -1,
-				read.activity.sequence,
+				activity.sequence,
 			),
 		};
 	}
@@ -303,12 +334,7 @@ export function observeActivity(
 				source: "activity",
 				activity: detail,
 			};
-		} else if (
-			lifecycle.pane.kind === "unknown" ||
-			lifecycle.pane.kind === "read-error" ||
-			(lifecycle.pane.kind === "present" &&
-				lifecycle.pane.agentStatus === "unknown")
-		) {
+		} else if (withoutHerdrStatus) {
 			turn = {
 				kind: "active",
 				startedAt: detailStartedAt,
@@ -322,6 +348,9 @@ export function observeActivity(
 		...lifecycle,
 		process,
 		turn,
+		// Pi reporting an active turn proves the child has worked, even when the
+		// turn ended between two Herdr inspections.
+		hasWorked: true,
 		activityDetail: detail,
 		activityHealth: { kind: "healthy", observedAt },
 		lastActivitySequence: detail.sequence,

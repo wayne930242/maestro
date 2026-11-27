@@ -14,6 +14,20 @@
   `hasUndeliveredChildren`, the auto-exit guard for children that launch
   children, now reads it. Its behaviour and tests are unchanged.
 
+### Idle and blocked children no longer project as running
+
+- A live child whose turn ended stayed `active` in the Subagents widget and
+  the run rows: the shared pane list proves only presence, so Herdr's
+  `done`/`idle`/`blocked` never reached the lifecycle, and Pi's ended turn did
+  not end the fallback active turn. Until a child's turn is known to be
+  waiting, its supervisor now reads Herdr's status from the child's own pane:
+  `done` or `idle` after a turn projects `waiting`, `blocked` projects
+  `blocked`, `working` stays `active`. Without a Herdr status (Herdr Core, or
+  a pane without agent detection), Pi's waiting or done phase projects
+  `waiting`. A persistent specialist between tasks is `waiting`.
+- Coarse status is still not exit evidence: a child that is done but alive
+  delivers nothing and keeps its run open.
+
 ## 0.1.2 (2026-11-16)
 
 Fixes for giuseppecrj/pi-herdr-agents#149, where every child failed with a bare

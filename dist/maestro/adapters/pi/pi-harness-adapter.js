@@ -450,7 +450,7 @@ export class PiHarnessAdapter {
                         child.launchFailure && !child.ownsSurface && !child.worktree
                             ? ""
                             : this.options.surface.readScreen(child.surface, 5),
-                        inspectPane: registration.inspectPane,
+                        inspectPane: () => this.inspectPaneStatus(child, registration),
                         onLocalEvidence: () => this.options.onObservation?.(child, "local-evidence"),
                         onPaneInspection: (pane, at) => {
                             child.lifecycle = observePaneInspection(child.lifecycle, pane, at);
@@ -507,6 +507,27 @@ export class PiHarnessAdapter {
             wait = next;
         }
         return this.joinWait(wait, signal);
+    }
+    /**
+     * The shared pane list proves presence but carries no Herdr agent status.
+     * Until the child's turn is known to be waiting, read that status from its
+     * own pane, so a child that ended its turn (done, idle) or opened a dialog
+     * (blocked) stops projecting as active. Only a present reading replaces
+     * the epoch's evidence: presence and absence stay the coordinator's.
+     */
+    async inspectPaneStatus(child, registration) {
+        const epoch = await registration.inspectPane();
+        if (epoch.kind !== "present" ||
+            epoch.agentStatus !== "unknown" ||
+            child.lifecycle.turn.kind === "waiting")
+            return epoch;
+        try {
+            const own = await this.options.surface.inspectSurface(child.surface);
+            return own.kind === "present" ? own : epoch;
+        }
+        catch {
+            return epoch;
+        }
     }
     /**
      * A child that failed before its session started has no transcript to
