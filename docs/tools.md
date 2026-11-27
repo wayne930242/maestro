@@ -532,8 +532,8 @@ if (probe.snapshot) {
 | `id` | The run ID: the child's `PI_SUBAGENT_ID` and the `subagent` acknowledgement's `details.id`. A resume is a new run with a new ID. |
 | `name` | The name the parent gave the run; a label, not a key. |
 | `agent` | The role, when the run has one; the key is absent otherwise. |
-| `persistent` | `true` for a persistent specialist, which stays tracked until it is stopped. |
-| `delivery` | `pending`, `delivered` or `suppressed`: whether the run's outcome is still to reach this parent. |
+| `persistent` | `true` for a persistent specialist, which normally stays tracked until stopped. A crash can also retire its row. |
+| `delivery` | `pending`, `delivered` or `suppressed`: the owner's bookkeeping for the outcome, not an acknowledgement from the parent. |
 
 The snapshot holds only rows tracked at the moment of the call, in registry
 (launch) order, as fresh copies. An ordinary run leaves the registry just
@@ -542,11 +542,11 @@ the owner tracks nothing; no `snapshot` means nothing answered. Rows that
 survive `/reload` are answered by the replacement load once it starts; between
 the old load's shutdown and the new load nothing answers. The probe reads
 memory only: it starts no I/O and changes no state, and no existing behaviour
-needs a listener. `@nubl/maestro/core/tracked-runs` exports the types,
-`TRACKED_RUNS_CHANNEL` and `readTrackedRuns(pi.events)`. The auto-exit guard
-for [children that launch children](#children-that-launch-children) reads the
-same projection, so an `auto-exit` child waits exactly while the snapshot holds
-an ordinary row whose delivery is `pending`.
+needs a listener.
+The `pi-herdr-agents:runs:v1` wire contract is the versioned seam.
+The types, `TRACKED_RUNS_CHANNEL` and `readTrackedRuns(pi.events)` exported by `@nubl/maestro/core/tracked-runs` are internal-compat, like the other `./core/*` exports.
+For [children that launch children](#children-that-launch-children), the guard reads the same projection and defers an otherwise eligible, non-error auto-exit while an ordinary run's outcome is pending.
+The snapshot itself is not an exit decision.
 
 ## The `/worktree` Workflow
 

@@ -58,7 +58,7 @@
 			"classification": "split",
 			"owned_change": {
 				"reason": "Tracked-run snapshot: a \"Tracked-run snapshot (pi-herdr-agents:runs:v1)\" section after the PI_SUBAGENT_ID hint documents the probe, its fields and its reload gap.",
-				"blob": "b3af0d1262cdbe7842a6de2c1efc0ab094cbd9b3"
+				"blob": "8686ddfb7f786b1fc3def2600000c9a9962274bf"
 			}
 		},
 		{

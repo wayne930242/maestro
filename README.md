@@ -81,7 +81,9 @@ compatibility families (including nested config/roles modules, the child
 protocol modules and `./pi/subagents/index`, whose default delegates to the
 factory) are
 **internal-compat, no stability promise**. The stars describe a family, not
-wildcard exports. No Herdr provider, terminal widget or renderer, terminal
+wildcard exports.
+For tracked runs, the versioned contract is the `pi-herdr-agents:runs:v1` wire protocol; `readTrackedRuns` and its `./core/tracked-runs` module are internal-compat.
+No Herdr provider, terminal widget or renderer, terminal
 entry or experimental worker entry ships here.
 
 Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`,
