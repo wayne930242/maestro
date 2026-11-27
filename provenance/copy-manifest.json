@@ -55,7 +55,11 @@
 			"destination": "docs/tools.md",
 			"blob": "edfd04d261745a323a919474557e3084a97f459d",
 			"archive": "provenance/upstream/docs/tools.md",
-			"classification": "split"
+			"classification": "split",
+			"owned_change": {
+				"reason": "Tracked-run snapshot: a \"Tracked-run snapshot (pi-herdr-agents:runs:v1)\" section after the PI_SUBAGENT_ID hint documents the probe, its fields and its reload gap.",
+				"blob": "b3af0d1262cdbe7842a6de2c1efc0ab094cbd9b3"
+			}
 		},
 		{
 			"kind": "copy",
@@ -578,6 +582,11 @@
 			"archive": "provenance/upstream/maestro/core/surface-provider.ts"
 		},
 		{
+			"kind": "new",
+			"destination": "maestro/core/tracked-runs.ts",
+			"reason": "Tracked-run snapshot (post-H2, Maestro-owned): the pi-herdr-agents:runs:v1 channel, its versioned DTOs, the registry projection that the probe answers and the auto-exit guard reads, and readTrackedRuns for emitters."
+		},
+		{
 			"kind": "copy",
 			"source": "maestro/core/types.ts",
 			"destination": "maestro/core/types.ts",
@@ -593,7 +602,11 @@
 			"source": "maestro/core/undelivered-children.ts",
 			"destination": "maestro/core/undelivered-children.ts",
 			"blob": "4cd823eb6593cf0ff855470a37881894c690a56c",
-			"archive": "provenance/upstream/maestro/core/undelivered-children.ts"
+			"archive": "provenance/upstream/maestro/core/undelivered-children.ts",
+			"owned_change": {
+				"reason": "Tracked-run snapshot (pi-herdr-agents:runs:v1): hasUndeliveredChildren reads projectTrackedRuns (maestro/core/tracked-runs.ts), the projection the probe answers; the registry row type moved there as TrackedRunRow. Behaviour unchanged: an ordinary row whose delivery is pending (or absent) counts; persistent and suppressed rows do not.",
+				"blob": "39a0c5709ed675bdbac4cb9ea3b4212b7637f8ca"
+			}
 		},
 		{
 			"kind": "copy",
@@ -782,7 +795,11 @@
 			"source": "pi-extension/subagents/extension.ts",
 			"destination": "pi-extension/subagents/extension.ts",
 			"blob": "eb0f5142908b4dedf0f158b455cde6954ea5a76e",
-			"archive": "provenance/upstream/pi-extension/subagents/extension.ts"
+			"archive": "provenance/upstream/pi-extension/subagents/extension.ts",
+			"owned_change": {
+				"reason": "Tracked-run snapshot: the subagents extension answers the synchronous pi-herdr-agents:runs:v1 probe with projectTrackedRuns(runningSubagents), registered beside the child-busy listener and removed at session_shutdown like it.",
+				"blob": "9e85b53df3636c933c29d5a1c00044077971229e"
+			}
 		},
 		{
 			"kind": "copy",

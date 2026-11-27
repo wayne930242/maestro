@@ -173,12 +173,19 @@ if (
 			["maestro/runtime/pi-run-session.ts"],
 		],
 	]);
-	// `owned` re-maps files Maestro already owns whose copy records an owned change.
-	const owned = new Set(
-		copies.entries.flatMap((entry) =>
-			entry.kind === "copy" && entry.owned_change ? [entry.source] : [],
-		),
+	// `owned` re-maps files Maestro already owns whose copy records an owned
+	// change, including an original split into a destination that records one.
+	const ownedCopies = copies.entries.flatMap((entry) =>
+		entry.kind === "copy" && entry.owned_change ? [entry] : [],
 	);
+	const owned = new Set([
+		...ownedCopies.map((entry) => entry.source),
+		...[...splits].flatMap(([original, destination]) =>
+			ownedCopies.some((entry) => entry.destination === destination)
+				? [original]
+				: [],
+		),
+	]);
 	for (const original of coverage.original_files) {
 		if (
 			step === "owned"

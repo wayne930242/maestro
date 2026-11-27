@@ -2054,12 +2054,36 @@
 			"split_line_map": [
 				{
 					"source_start": 1,
+					"source_end": 7,
+					"destination": "maestro/core/undelivered-children.ts",
+					"destination_start": 3
+				},
+				{
+					"source_start": 13,
+					"source_end": 13,
+					"destination": "maestro/core/undelivered-children.ts",
+					"destination_start": 10
+				},
+				{
+					"source_start": 15,
+					"source_end": 32,
+					"destination": "maestro/core/undelivered-children.ts",
+					"destination_start": 12
+				},
+				{
+					"source_start": 34,
+					"source_end": 37,
+					"destination": "maestro/core/undelivered-children.ts",
+					"destination_start": 32
+				},
+				{
+					"source_start": 43,
 					"source_end": 43,
 					"destination": "maestro/core/undelivered-children.ts",
-					"destination_start": 1
+					"destination_start": 39
 				}
 			],
-			"mapping_status": "M2 whole-file identity copy; no source lines split or omitted. M2 per-file gate: scripts/test-unit.ts --coverage.",
+			"mapping_status": "Copy from the H1 pin (maestro/core/undelivered-children.ts) with a recorded owned change after H2; 31/43 original lines map by indentation-insensitive line diff, 12 changed or removed after the coverage baseline, 8 destination lines are post-baseline. Gate: original-floor over mapped lines; post-baseline lines reported.",
 			"covered_lines": 43,
 			"total_lines": 43,
 			"branch_function_variants": [
@@ -3140,144 +3164,162 @@
 			"split_line_map": [
 				{
 					"source_start": 1,
-					"source_end": 69,
+					"source_end": 41,
 					"destination": "pi-extension/subagents/extension.ts",
 					"destination_start": 1
+				},
+				{
+					"source_start": 42,
+					"source_end": 69,
+					"destination": "pi-extension/subagents/extension.ts",
+					"destination_start": 47
 				},
 				{
 					"source_start": 71,
 					"source_end": 82,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 72
+					"destination_start": 77
 				},
 				{
 					"source_start": 84,
 					"source_end": 101,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 85
+					"destination_start": 90
 				},
 				{
 					"source_start": 102,
 					"source_end": 123,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 155
+					"destination_start": 160
 				},
 				{
 					"source_start": 130,
 					"source_end": 131,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 177
+					"destination_start": 182
 				},
 				{
 					"source_start": 133,
 					"source_end": 134,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 180
+					"destination_start": 185
 				},
 				{
 					"source_start": 139,
 					"source_end": 140,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 183
+					"destination_start": 188
 				},
 				{
 					"source_start": 142,
 					"source_end": 144,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 186
+					"destination_start": 191
 				},
 				{
 					"source_start": 146,
 					"source_end": 148,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 190
+					"destination_start": 195
 				},
 				{
 					"source_start": 150,
 					"source_end": 152,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 194
+					"destination_start": 199
 				},
 				{
 					"source_start": 154,
 					"source_end": 155,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 198
+					"destination_start": 203
 				},
 				{
 					"source_start": 160,
 					"source_end": 161,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 201
+					"destination_start": 206
 				},
 				{
 					"source_start": 163,
 					"source_end": 188,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 204
+					"destination_start": 209
 				},
 				{
 					"source_start": 190,
 					"source_end": 222,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 231
+					"destination_start": 236
 				},
 				{
 					"source_start": 249,
 					"source_end": 280,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 266
+					"destination_start": 271
 				},
 				{
 					"source_start": 290,
 					"source_end": 300,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 299
+					"destination_start": 304
 				},
 				{
 					"source_start": 302,
 					"source_end": 404,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 313
+					"destination_start": 318
 				},
 				{
 					"source_start": 406,
+					"source_end": 476,
+					"destination": "pi-extension/subagents/extension.ts",
+					"destination_start": 427
+				},
+				{
+					"source_start": 477,
+					"source_end": 480,
+					"destination": "pi-extension/subagents/extension.ts",
+					"destination_start": 504
+				},
+				{
+					"source_start": 481,
 					"source_end": 524,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 422
+					"destination_start": 509
 				},
 				{
 					"source_start": 526,
 					"source_end": 528,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 542
+					"destination_start": 554
 				},
 				{
 					"source_start": 529,
 					"source_end": 541,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 546
+					"destination_start": 558
 				},
 				{
 					"source_start": 542,
 					"source_end": 551,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 560
+					"destination_start": 572
 				},
 				{
 					"source_start": 552,
 					"source_end": 568,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 571
+					"destination_start": 583
 				},
 				{
 					"source_start": 570,
 					"source_end": 570,
 					"destination": "pi-extension/subagents/extension.ts",
-					"destination_start": 589
+					"destination_start": 601
 				}
 			],
-			"mapping_status": "M4 copy from the H1 pin (pi-extension/subagents/extension.ts); 508/570 original lines map by indentation-insensitive line diff, 62 changed or removed upstream after the coverage baseline, 84 destination lines are post-baseline. Gate: original-floor over mapped lines; post-baseline lines reported.",
+			"mapping_status": "Copy from the H1 pin (pi-extension/subagents/extension.ts) with a recorded owned change after H2; 508/570 original lines map by indentation-insensitive line diff, 62 changed or removed after the coverage baseline, 96 destination lines are post-baseline. Gate: original-floor over mapped lines; post-baseline lines reported.",
 			"covered_lines": 529,
 			"total_lines": 570,
 			"branch_function_variants": [

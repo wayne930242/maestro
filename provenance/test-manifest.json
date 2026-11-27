@@ -1159,7 +1159,8 @@
 		"test/maestro/admission-outbox.test.ts",
 		"test/maestro/worker-observer-persistence.test.ts",
 		"test/maestro/worker-bound-check.test.ts",
-		"test/maestro/worker-materialize.test.ts"
+		"test/maestro/worker-materialize.test.ts",
+		"test/maestro/tracked-runs.test.ts"
 	],
 	"identity_ledger": "baseline/test-identities.json.gz",
 	"identity_capture": "evidence/baseline-final/baseline.jsonl",

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Tracked-run snapshot probe
+
+- New synchronous event-bus probe `pi-herdr-agents:runs:v1`: another
+  in-process extension emits `{}` and the run owner sets
+  `snapshot = { version: 1, runs: [{ id, name, agent?, persistent, delivery }] }`
+  with the runs it tracks now (no delivered history). No listener is needed
+  by any existing behaviour. See
+  [docs/tools.md](docs/tools.md#tracked-run-snapshot-pi-herdr-agentsrunsv1).
+- `maestro/core/tracked-runs.ts` (new) holds the projection;
+  `hasUndeliveredChildren`, the auto-exit guard for children that launch
+  children, now reads it. Its behaviour and tests are unchanged.
+
 ### Bound checks and failure and cancel hand-offs (P3-10)
 
 Opt-in by explicit composition (`WorkerRunChecks` as a worker parent's run

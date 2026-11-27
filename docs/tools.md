@@ -511,6 +511,43 @@ and nested processes a child runs inherit it, including a `pi` process started
 from the child's Bash tool. Do not grant or deny privileges based on it. There
 is no other parent/child protocol.
 
+## Tracked-run snapshot (`pi-herdr-agents:runs:v1`)
+
+Another extension in the same Pi process can ask which runs this session's run
+owner tracks now. It emits a probe object on Pi's event bus, and the owner sets
+`snapshot` on it synchronously, before `emit` returns:
+
+```ts
+const probe: { snapshot?: { version: 1; runs: TrackedRun[] } } = {};
+pi.events.emit("pi-herdr-agents:runs:v1", probe);
+if (probe.snapshot) {
+  // { version: 1, runs: [{ id, name, agent?, persistent, delivery }] }
+} else {
+  // No owner answered: an older host, or a reload gap.
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `id` | The run ID: the child's `PI_SUBAGENT_ID` and the `subagent` acknowledgement's `details.id`. A resume is a new run with a new ID. |
+| `name` | The name the parent gave the run; a label, not a key. |
+| `agent` | The role, when the run has one; the key is absent otherwise. |
+| `persistent` | `true` for a persistent specialist, which stays tracked until it is stopped. |
+| `delivery` | `pending`, `delivered` or `suppressed`: whether the run's outcome is still to reach this parent. |
+
+The snapshot holds only rows tracked at the moment of the call, in registry
+(launch) order, as fresh copies. An ordinary run leaves the registry just
+before its result is sent, so there is no delivered history. `runs: []` means
+the owner tracks nothing; no `snapshot` means nothing answered. Rows that
+survive `/reload` are answered by the replacement load once it starts; between
+the old load's shutdown and the new load nothing answers. The probe reads
+memory only: it starts no I/O and changes no state, and no existing behaviour
+needs a listener. `@nubl/maestro/core/tracked-runs` exports the types,
+`TRACKED_RUNS_CHANNEL` and `readTrackedRuns(pi.events)`. The auto-exit guard
+for [children that launch children](#children-that-launch-children) reads the
+same projection, so an `auto-exit` child waits exactly while the snapshot holds
+an ordinary row whose delivery is `pending`.
+
 ## The `/worktree` Workflow
 
 `/worktree <worktree> [task]` creates a Herdr-managed worktree from the current committed branch and launches a new interactive Pi session there with the active conversation branch. The original session remains available. Use `/worktree list` or `worktree_list({})` to inspect managed worktrees, including cross-session orphans, whose canonical source repositories are inside the session's cwd subtree. This is a new-process handoff, not an in-place move of the existing shell or Pi process.

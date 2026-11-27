@@ -39,6 +39,11 @@ import {
 	type ChildBusyProbe,
 } from "../../maestro/core/child-busy.ts";
 import {
+	TRACKED_RUNS_CHANNEL,
+	projectTrackedRuns,
+	type TrackedRunsProbe,
+} from "../../maestro/core/tracked-runs.ts";
+import {
 	WIDGET_INTERVAL_KEY,
 	STATUS_INTERVAL_KEY,
 	RUNTIME_KEY,
@@ -490,10 +495,17 @@ export function createPiExtension(hostOptions: PiHostOptions) {
 			if (probe && hasWorkingSubagents(runningSubagents.values()))
 				probe.busy = true;
 		});
+		// Other in-process extensions read the runs this owner tracks now.
+		const stopTrackedRuns = pi.events.on(TRACKED_RUNS_CHANNEL, (raw) => {
+			// SAFETY: the channel's contract is a TrackedRunsProbe (readTrackedRuns).
+			const probe = raw as TrackedRunsProbe | undefined;
+			if (probe) probe.snapshot = projectTrackedRuns(runningSubagents);
+		});
 
 		// Clean up on session shutdown
 		pi.on("session_shutdown", async (event, _ctx) => {
 			stopChildBusy();
+			stopTrackedRuns();
 			stopRefresh();
 			// Pi invalidates this context and API once shutdown returns. Watchers that
 			// survive a reload must neither read the context nor send through the API;
