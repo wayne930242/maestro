@@ -5,6 +5,11 @@
 	"entries": [
 		{
 			"kind": "new",
+			"destination": "maestro/build-info.ts",
+			"reason": "weihung fork (14009f0): the loaded build's version and root, exported from ./pi for host load stamps."
+		},
+		{
+			"kind": "new",
 			"destination": "maestro/engine.ts",
 			"reason": "Pi-free facade for the M2 generic owner; since M6 also the package root ('.')."
 		},
