@@ -174,6 +174,12 @@ export interface PiStartedMetadata {
 	status: "started" | "uncertain";
 	launchFailure?: string;
 }
+/** One spawned attempt of a run: its model, its session file's path (which a failed attempt may never have written), and its wall time in whole seconds. */
+export interface PiSpawnedAttempt {
+	model?: string;
+	sessionFile?: string;
+	elapsed: number;
+}
 // pi-herdr-agents extension
 export interface PiCompletedMetadata {
 	run: RunResult;
@@ -190,6 +196,8 @@ export interface PiCompletedMetadata {
 	ping?: { name: string; message: string };
 	fallbackAttempts?: string[];
 	fallbackFailures?: { model: string; error: string }[];
+	/** Every spawned attempt of the run in order, failed fallbacks included; the last is this result's. */
+	attempts?: PiSpawnedAttempt[];
 	runtimePlan?: ResolvedRuntimePlan;
 	worktree?: PiWorktreeHandoff;
 	/** The verdict; absent means no check was requested (`none`). */

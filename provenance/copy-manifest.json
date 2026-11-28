@@ -58,8 +58,8 @@
 			"archive": "provenance/upstream/docs/delegation-outcome-contract.md",
 			"classification": "split",
 			"owned_change": {
-				"reason": "weihung fork: document the optional work item and outcome row identifiers",
-				"blob": "7fef6a243116abd10b88a490ec52354b41475580"
+				"reason": "weihung fork: document the optional work item and outcome row identifiers | weihung fork: a run's end names its run id, a ping its elapsed, and every spawned attempt (model, session file, elapsed) for spend booking",
+				"blob": "3e5c3313b64724e3136037a0123bcffd38940df6"
 			}
 		},
 		{
@@ -643,8 +643,8 @@
 			"blob": "38ce85d8dfcc8bdb09efda9cca40c755a23f8eaf",
 			"archive": "provenance/upstream/maestro/runtime/pi-run-session-types.ts",
 			"owned_change": {
-				"reason": "weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0) | weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session",
-				"blob": "cd7006aa7b9a32480a7164a32fb297676b81f26a"
+				"reason": "weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0) | weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session | weihung fork: a run's end names its run id, a ping its elapsed, and every spawned attempt (model, session file, elapsed) for spend booking",
+				"blob": "8d72a372d7b6eac9e110647aceaafe0c327f19b3"
 			}
 		},
 		{
@@ -655,8 +655,8 @@
 			"archive": "provenance/upstream/maestro/runtime/pi-run-session.ts",
 			"classification": "split",
 			"owned_change": {
-				"reason": "#149: the host summary of such an exit appends the relayed exitOutput. | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0) | weihung fork: launch under a kernel adopted across reload that passes no cancel signal (pi-herdr-agents fork 6f530b9) | weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session",
-				"blob": "fdf4dc100bb1e3ec78a47c99918f5fa6f5a0dd25"
+				"reason": "#149: the host summary of such an exit appends the relayed exitOutput. | weihung fork: an unconfirmed cancel re-observes (confirmTerminated, no signal) and settles once its pane or process is seen gone (pi-herdr-agents fork 4921564, ec9d0d0) | weihung fork: launch under a kernel adopted across reload that passes no cancel signal (pi-herdr-agents fork 6f530b9) | weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session | weihung fork: a run's end names its run id, a ping its elapsed, and every spawned attempt (model, session file, elapsed) for spend booking",
+				"blob": "6fb5f554de3eb44583c25dfc988e45e26d3b232c"
 			}
 		},
 		{
@@ -773,8 +773,8 @@
 			"blob": "6f6b9abaa63abcb6443fbbc00a2d22a002d2b44a",
 			"archive": "provenance/upstream/pi-extension/subagents/delivery.ts",
 			"owned_change": {
-				"reason": "weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session",
-				"blob": "541b981ffa0a95a3ac281db2b7890a2e5709b451"
+				"reason": "weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session | weihung fork: a run's end names its run id, a ping its elapsed, and every spawned attempt (model, session file, elapsed) for spend booking",
+				"blob": "351a341b5b133c48df63becf9231b7190ec88577"
 			}
 		},
 		{
@@ -842,8 +842,8 @@
 			"blob": "529179ef4077c7d32852aeb5d1d136032f59d4d6",
 			"archive": "provenance/upstream/pi-extension/subagents/presentation.ts",
 			"owned_change": {
-				"reason": "weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session",
-				"blob": "9a1bcd1b977727e6ff9b86d3a7f567ff37a97618"
+				"reason": "weihung fork: correlate subagent launches and outcome rows with the caller’s work item and session | weihung fork: a run's end names its run id, a ping its elapsed, and every spawned attempt (model, session file, elapsed) for spend booking",
+				"blob": "5d6c21a2a8e574c9db3f58a3e3a51c3e11251778"
 			}
 		},
 		{

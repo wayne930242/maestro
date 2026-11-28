@@ -209,7 +209,7 @@ export function createDefaultRunSession(options, previous) {
                         const owner = adapter(snapshot);
                         const handle = await owner.resume(resumeOptions);
                         task.cwd = handle.cwd;
-                        return acquired(task, snapshot.parent.sessionId, owner, handle, [], [], undefined, before.length, acquisition.suppressed);
+                        return acquired(task, snapshot.parent.sessionId, owner, handle, [], [], [], undefined, before.length, acquisition.suppressed);
                     }
                     finally {
                         state.pending.delete(acquisition);
@@ -391,7 +391,7 @@ export function createDefaultRunSession(options, previous) {
             },
         });
     }
-    function acquired(task, parent, owner, handle, attempts, failures, warning, cursor, suppressed = false) {
+    function acquired(task, parent, owner, handle, attempts, failures, spawned, warning, cursor, suppressed = false) {
         const child = owner.getRunningChild(handle);
         const entry = {
             record: child,
@@ -574,6 +574,19 @@ export function createDefaultRunSession(options, previous) {
                     generationId: child.generationId,
                     policyHash: child.policyHash,
                 };
+                // Every spawned attempt, a failed fallback's too: a host that books a
+                // run's spend reads each attempt's file, not only the last one's.
+                const attemptModel = child.runtimePlan?.observed?.model ??
+                    child.runtimePlan?.model ??
+                    (observedRuntime.provider && observedRuntime.modelId
+                        ? `${observedRuntime.provider}/${observedRuntime.modelId}`
+                        : attempts.at(-1));
+                spawned.push({
+                    ...(attemptModel !== undefined && { model: attemptModel }),
+                    sessionFile: child.sessionFile,
+                    elapsed: entry.completed.elapsed,
+                });
+                entry.completed.attempts = [...spawned];
                 if (state.options.outcomeLedger !== false)
                     appendOutcomeLedger(outcomeLedgerFile(state.options.configDir), {
                         at,
@@ -611,6 +624,7 @@ export function createDefaultRunSession(options, previous) {
         let parent = input.task.session?.parentSessionId ?? snapshot?.parent.sessionId;
         const attempts = [];
         const failures = [];
+        const spawned = [];
         let publicId;
         let logicalId;
         let capturedSnapshot = snapshot;
@@ -673,7 +687,7 @@ export function createDefaultRunSession(options, previous) {
                     });
                     publicId = handle.id;
                     logicalId ??= current.identity.logicalId;
-                    return acquired(input.task, parent, owner, handle, attempts, failures, input.warning, undefined, acquisition.suppressed);
+                    return acquired(input.task, parent, owner, handle, attempts, failures, spawned, input.warning, undefined, acquisition.suppressed);
                 }
                 catch (error) {
                     if (cancelled.aborted && !spawning) {

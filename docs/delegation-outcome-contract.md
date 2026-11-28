@@ -332,7 +332,9 @@ file, and any worktree handoff.
 
 | Evidence | Message text | Structured details |
 | --- | --- | --- |
+| Run identity | None | `id`: the run id the launch or resume acknowledged, on every `subagent_result` and `subagent_ping` (`delivery.ts` `settle`) |
 | Session file | `Session: <path>` and `Resume: pi --session <shell word>`, or the [omitted note](#executable-commands) (`presentation.ts` `sessionFields`) | `sessionFile` |
+| Attempts | None | `attempts`: every spawned attempt of the run in order, failed fallbacks included, each `{ model?, sessionFile?, elapsed }`; `elapsed` is whole seconds, the last entry is the delivered attempt, and `sessionFile` is the attempt's session file path, which a failed attempt may never have written. A resume has one attempt. A `subagent_ping` also carries `elapsed`. |
 | Model provenance | `Requested model:`, `Models attempted:` when more than one, `Model used:`, and `Model failures (raw errors, encoded, in attempt order):` (`resolveResultPresentation`) | `fallbackAttempts`, `fallbackFailures`, `runtimePlan` |
 | Runtime mismatch | `Runtime warning: <text>` | `runtimePlan.runtimeMismatch` |
 | Provider error | `Error: <encoded error>` in the head | `errorMessage` (raw) |

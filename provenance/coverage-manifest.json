@@ -2374,138 +2374,174 @@
 				},
 				{
 					"source_start": 86,
-					"source_end": 171,
+					"source_end": 100,
 					"destination": "maestro/runtime/pi-run-session.ts",
 					"destination_start": 81
+				},
+				{
+					"source_start": 101,
+					"source_end": 171,
+					"destination": "maestro/runtime/pi-run-session.ts",
+					"destination_start": 97
 				},
 				{
 					"source_start": 173,
 					"source_end": 173,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 168
+					"destination_start": 169
 				},
 				{
 					"source_start": 181,
 					"source_end": 181,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 173
+					"destination_start": 174
 				},
 				{
 					"source_start": 184,
 					"source_end": 184,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 176
+					"destination_start": 177
 				},
 				{
 					"source_start": 187,
 					"source_end": 218,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 179
+					"destination_start": 180
 				},
 				{
 					"source_start": 238,
 					"source_end": 258,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 211
+					"destination_start": 212
 				},
 				{
 					"source_start": 259,
 					"source_end": 261,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 234
+					"destination_start": 235
 				},
 				{
 					"source_start": 263,
 					"source_end": 298,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 238
+					"destination_start": 239
 				},
 				{
 					"source_start": 300,
 					"source_end": 346,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 275
+					"destination_start": 276
 				},
 				{
 					"source_start": 347,
 					"source_end": 402,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 323
+					"destination_start": 324
 				},
 				{
 					"source_start": 403,
+					"source_end": 406,
+					"destination": "maestro/runtime/pi-run-session.ts",
+					"destination_start": 381
+				},
+				{
+					"source_start": 407,
 					"source_end": 526,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 380
+					"destination_start": 386
 				},
 				{
 					"source_start": 528,
 					"source_end": 580,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 505
+					"destination_start": 507
 				},
 				{
 					"source_start": 582,
 					"source_end": 588,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 559
+					"destination_start": 561
 				},
 				{
 					"source_start": 589,
 					"source_end": 616,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 567
+					"destination_start": 569
 				},
 				{
 					"source_start": 617,
+					"source_end": 620,
+					"destination": "maestro/runtime/pi-run-session.ts",
+					"destination_start": 598
+				},
+				{
+					"source_start": 621,
 					"source_end": 630,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 596
+					"destination_start": 603
 				},
 				{
 					"source_start": 631,
 					"source_end": 724,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 611
+					"destination_start": 614
 				},
 				{
 					"source_start": 726,
+					"source_end": 829,
+					"destination": "maestro/runtime/pi-run-session.ts",
+					"destination_start": 709
+				},
+				{
+					"source_start": 830,
 					"source_end": 833,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 706
+					"destination_start": 827
 				},
 				{
 					"source_start": 834,
 					"source_end": 871,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 817
+					"destination_start": 834
 				},
 				{
 					"source_start": 872,
+					"source_end": 873,
+					"destination": "maestro/runtime/pi-run-session.ts",
+					"destination_start": 883
+				},
+				{
+					"source_start": 874,
 					"source_end": 883,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 866
+					"destination_start": 886
 				},
 				{
 					"source_start": 885,
 					"source_end": 907,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 882
+					"destination_start": 900
 				},
 				{
 					"source_start": 908,
 					"source_end": 938,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 906
+					"destination_start": 924
 				},
 				{
 					"source_start": 939,
+					"source_end": 942,
+					"destination": "maestro/runtime/pi-run-session.ts",
+					"destination_start": 956
+				},
+				{
+					"source_start": 943,
 					"source_end": 1095,
 					"destination": "maestro/runtime/pi-run-session.ts",
-					"destination_start": 938
+					"destination_start": 961
 				}
 			],
-			"mapping_status": "Copy from the H1 pin (maestro/runtime/pi-run-session.ts) with a recorded owned change after H2; 1050/1095 original lines map by indentation-insensitive line diff, 45 changed or removed after the coverage baseline, 44 destination lines are post-baseline. Gate: original-floor over mapped lines; post-baseline lines reported.",
+			"mapping_status": "Copy from the H1 pin (maestro/runtime/pi-run-session.ts) with a recorded owned change after H2; 1050/1095 original lines map by indentation-insensitive line diff, 45 changed or removed after the coverage baseline, 63 destination lines are post-baseline. Gate: original-floor over mapped lines; post-baseline lines reported.",
 			"covered_lines": 1061,
 			"total_lines": 1095,
 			"branch_function_variants": [
@@ -3367,30 +3403,66 @@
 				},
 				{
 					"source_start": 417,
+					"source_end": 419,
+					"destination": "pi-extension/subagents/delivery.ts",
+					"destination_start": 421
+				},
+				{
+					"source_start": 420,
 					"source_end": 420,
 					"destination": "pi-extension/subagents/delivery.ts",
-					"destination_start": 418
+					"destination_start": 425
 				},
 				{
 					"source_start": 421,
+					"source_end": 424,
+					"destination": "pi-extension/subagents/delivery.ts",
+					"destination_start": 427
+				},
+				{
+					"source_start": 425,
+					"source_end": 445,
+					"destination": "pi-extension/subagents/delivery.ts",
+					"destination_start": 432
+				},
+				{
+					"source_start": 446,
 					"source_end": 446,
 					"destination": "pi-extension/subagents/delivery.ts",
-					"destination_start": 423
+					"destination_start": 454
 				},
 				{
 					"source_start": 447,
+					"source_end": 448,
+					"destination": "pi-extension/subagents/delivery.ts",
+					"destination_start": 456
+				},
+				{
+					"source_start": 449,
+					"source_end": 484,
+					"destination": "pi-extension/subagents/delivery.ts",
+					"destination_start": 460
+				},
+				{
+					"source_start": 485,
 					"source_end": 485,
 					"destination": "pi-extension/subagents/delivery.ts",
-					"destination_start": 450
+					"destination_start": 497
 				},
 				{
 					"source_start": 486,
+					"source_end": 489,
+					"destination": "pi-extension/subagents/delivery.ts",
+					"destination_start": 499
+				},
+				{
+					"source_start": 490,
 					"source_end": 519,
 					"destination": "pi-extension/subagents/delivery.ts",
-					"destination_start": 490
+					"destination_start": 504
 				}
 			],
-			"mapping_status": "Copy from the H1 pin (pi-extension/subagents/delivery.ts) with a recorded owned change after H2; 519/519 original lines map by indentation-insensitive line diff, 0 changed or removed after the coverage baseline, 4 destination lines are post-baseline. Gate: original-floor over mapped lines; post-baseline lines reported.",
+			"mapping_status": "Copy from the H1 pin (pi-extension/subagents/delivery.ts) with a recorded owned change after H2; 519/519 original lines map by indentation-insensitive line diff, 0 changed or removed after the coverage baseline, 14 destination lines are post-baseline. Gate: original-floor over mapped lines; post-baseline lines reported.",
 			"covered_lines": 516,
 			"total_lines": 519,
 			"branch_function_variants": [
@@ -3880,24 +3952,48 @@
 			"split_line_map": [
 				{
 					"source_start": 1,
-					"source_end": 458,
+					"source_end": 4,
 					"destination": "pi-extension/subagents/presentation.ts",
 					"destination_start": 1
 				},
 				{
+					"source_start": 5,
+					"source_end": 457,
+					"destination": "pi-extension/subagents/presentation.ts",
+					"destination_start": 6
+				},
+				{
+					"source_start": 458,
+					"source_end": 458,
+					"destination": "pi-extension/subagents/presentation.ts",
+					"destination_start": 461
+				},
+				{
 					"source_start": 459,
+					"source_end": 470,
+					"destination": "pi-extension/subagents/presentation.ts",
+					"destination_start": 463
+				},
+				{
+					"source_start": 471,
+					"source_end": 478,
+					"destination": "pi-extension/subagents/presentation.ts",
+					"destination_start": 477
+				},
+				{
+					"source_start": 479,
 					"source_end": 479,
 					"destination": "pi-extension/subagents/presentation.ts",
-					"destination_start": 460
+					"destination_start": 487
 				},
 				{
 					"source_start": 480,
 					"source_end": 690,
 					"destination": "pi-extension/subagents/presentation.ts",
-					"destination_start": 482
+					"destination_start": 493
 				}
 			],
-			"mapping_status": "Copy from the H1 pin (pi-extension/subagents/presentation.ts) with a recorded owned change after H2; 690/690 original lines map by indentation-insensitive line diff, 0 changed or removed after the coverage baseline, 2 destination lines are post-baseline. Gate: original-floor over mapped lines; post-baseline lines reported.",
+			"mapping_status": "Copy from the H1 pin (pi-extension/subagents/presentation.ts) with a recorded owned change after H2; 690/690 original lines map by indentation-insensitive line diff, 0 changed or removed after the coverage baseline, 13 destination lines are post-baseline. Gate: original-floor over mapped lines; post-baseline lines reported.",
 			"covered_lines": 670,
 			"total_lines": 690,
 			"branch_function_variants": [

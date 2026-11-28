@@ -988,12 +988,20 @@ describe("host adapter migration", () => {
 						const rawError = `EISDIR: illegal operation on a directory, read`;
 						const resultContent = `Sub-agent "processing" failed (exit code 1).\nCheck: none\n\nSubagent error: ${rawError}\n\nRequested model: fake/first`;
 						assert.deepEqual(message.details, {
+							id: child.id,
 							name: "processing",
 							task: "bounded",
 							agent: "error-role",
 							exitCode: 1,
 							elapsed: message.details.elapsed,
 							sessionFile: undefined,
+							attempts: [
+								{
+									model: "fake/first",
+									sessionFile: child.sessionFile,
+									elapsed: message.details.elapsed,
+								},
+							],
 							fallbackAttempts: ["fake/first"],
 							fallbackFailures: [],
 							runtimePlan: child.runtimePlan,
@@ -2306,11 +2314,18 @@ describe("host adapter migration", () => {
 					if (recover) {
 						assert.equal(readError, undefined);
 						assert.deepEqual(f.mock.sentMessages[0].message.details, {
+							id: child.id,
 							name: "resumed",
 							task: "followup",
 							exitCode: 1,
 							elapsed: f.mock.sentMessages[0].message.details.elapsed,
 							sessionFile: path,
+							attempts: [
+								{
+									sessionFile: path,
+									elapsed: f.mock.sentMessages[0].message.details.elapsed,
+								},
+							],
 							resultContent: `Sub-agent "resumed" failed (exit code 1).\nCheck: none\n\n${recover === "empty" ? "Resumed session exited with code 1" : childReport("resumed", "failure", "Recovered new output")}\n\n${sessionFooter(path)}`,
 						});
 					} else assert.match(String(readError), /EISDIR/);

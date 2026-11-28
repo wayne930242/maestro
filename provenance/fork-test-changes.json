@@ -1,5 +1,15 @@
 [
 	{
+		"destination": "test/tools-monolith.test.ts",
+		"title": "for (const accepted of [true, false])",
+		"reason": "weihung fork: a run's end names its run id and every spawned attempt (subagent_result details id, attempts)"
+	},
+	{
+		"destination": "test/tools-monolith.test.ts",
+		"title": "for (const recover of [false, \"output\", \"empty\"])",
+		"reason": "weihung fork: a run's end names its run id and every spawned attempt (subagent_result details id, attempts)"
+	},
+	{
 		"destination": "test/maestro/accept-recheck.test.ts",
 		"title": "the parent re-check accepts a completed run and writes one ledger line",
 		"reason": "A ledger row includes the run name and launching session id even without an item."

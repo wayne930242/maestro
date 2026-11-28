@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### A run's end names its run and its attempts
+
+- `subagent_result` and `subagent_ping` details carry `id`, the run id the
+  launch or resume acknowledged, so a host ties an end to its launch without
+  matching names or session files.
+- They also carry `attempts`: every spawned attempt in order, failed
+  fallbacks included, as `{ model?, sessionFile?, elapsed }`. A host that
+  books a run's spend reads each attempt's file, not only the last one's.
+- A `subagent_ping` now carries `elapsed` in its details, as a result does.
+  All three fields are additive; nothing else in the delivery changes.
+
 ### Tracked-run snapshot probe
 
 - New synchronous event-bus probe `pi-herdr-agents:runs:v1`: another

@@ -2,6 +2,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import type { RunCancellation } from "../../maestro/core/types.ts";
 import type { ResolvedRuntimePlan } from "../../maestro/core/routing.ts";
 import type { WorktreeHandoff } from "../../maestro/core/worktree.ts";
+import type { PiSpawnedAttempt } from "../../maestro/runtime/pi-run-session-types.ts";
 import { type AcceptOutcome } from "../../maestro/core/accept.ts";
 import type { ModelFailure, SubagentResult } from "./state.ts";
 export declare function getFirstText(content: readonly {
@@ -100,6 +101,8 @@ export declare function worktreeHandoffFields(worktree: WorktreeHandoff): HostFi
  */
 export declare function checkField(accept: AcceptOutcome | undefined): HostField;
 export interface SubagentResultDetails {
+    /** The run id the launch or resume acknowledged (`details.id`). */
+    id?: string;
     name: string;
     item?: string;
     task?: string;
@@ -114,6 +117,8 @@ export interface SubagentResultDetails {
     errorMessage?: string;
     fallbackAttempts?: string[];
     fallbackFailures?: ModelFailure[];
+    /** Every spawned attempt of the run in order, failed fallbacks included. */
+    attempts?: PiSpawnedAttempt[];
     worktree?: WorktreeHandoff;
     runtimePlan?: ResolvedRuntimePlan;
     cancellation?: RunCancellation;
@@ -121,8 +126,14 @@ export interface SubagentResultDetails {
     accept?: AcceptOutcome;
 }
 export interface SubagentPingDetails {
+    /** The run id the launch or resume acknowledged (`details.id`). */
+    id?: string;
     name: string;
     item?: string;
+    /** The run's wall time until it asked, in whole seconds. */
+    elapsed?: number;
+    /** Every spawned attempt of the run in order, failed fallbacks included. */
+    attempts?: PiSpawnedAttempt[];
     /** The name the child wrote in its sidecar, when it differs from `name`. */
     reportedName?: string;
     message: string;

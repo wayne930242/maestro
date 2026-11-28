@@ -93,6 +93,7 @@ import type {
 	PiRunSession,
 	PiRunSessionInfrastructure,
 	PiSettlementIO,
+	PiSpawnedAttempt,
 	PiStartedMetadata,
 	PiWorktreeHandoff,
 } from "./pi-run-session-types.ts";
@@ -381,6 +382,7 @@ export function createDefaultRunSession(
 							handle,
 							[],
 							[],
+							[],
 							undefined,
 							before.length,
 							acquisition.suppressed,
@@ -597,6 +599,7 @@ export function createDefaultRunSession(
 		handle: AgentHandle,
 		attempts: string[],
 		failures: { model: string; error: string }[],
+		spawned: PiSpawnedAttempt[],
 		warning?: string,
 		cursor?: number,
 		suppressed = false,
@@ -807,6 +810,20 @@ export function createDefaultRunSession(
 					generationId: child.generationId,
 					policyHash: child.policyHash,
 				};
+				// Every spawned attempt, a failed fallback's too: a host that books a
+				// run's spend reads each attempt's file, not only the last one's.
+				const attemptModel =
+					child.runtimePlan?.observed?.model ??
+					child.runtimePlan?.model ??
+					(observedRuntime.provider && observedRuntime.modelId
+						? `${observedRuntime.provider}/${observedRuntime.modelId}`
+						: attempts.at(-1));
+				spawned.push({
+					...(attemptModel !== undefined && { model: attemptModel }),
+					sessionFile: child.sessionFile,
+					elapsed: entry.completed.elapsed,
+				});
+				entry.completed.attempts = [...spawned];
 				if (state.options.outcomeLedger !== false)
 					appendOutcomeLedger(outcomeLedgerFile(state.options.configDir), {
 						at,
@@ -865,6 +882,7 @@ export function createDefaultRunSession(
 			input.task.session?.parentSessionId ?? snapshot?.parent.sessionId;
 		const attempts: string[] = [];
 		const failures: { model: string; error: string }[] = [];
+		const spawned: PiSpawnedAttempt[] = [];
 		let publicId: string | undefined;
 		let logicalId: string | undefined;
 		let capturedSnapshot = snapshot;
@@ -939,6 +957,7 @@ export function createDefaultRunSession(
 						handle,
 						attempts,
 						failures,
+						spawned,
 						input.warning,
 						undefined,
 						acquisition.suppressed,

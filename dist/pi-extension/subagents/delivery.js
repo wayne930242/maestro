@@ -265,15 +265,20 @@ export function createDelivery({ runtime, updateWidget, startPersistentStopTimeo
         runningSubagents.delete(running.id);
         updateWidget();
         const item = task.item !== undefined ? { item: task.item } : {};
+        // The run's id and every spawned attempt: a host ties the end to its launch
+        // by the id, and books each attempt's session file.
+        const attempts = result.attempts ? { attempts: result.attempts } : {};
         const cancellation = result.run.cancellation;
         if (cancellation) {
             const details = {
+                id: running.id,
                 name: running.name,
                 ...item,
                 task: task.prompt,
                 exitCode: result.exitCode,
                 elapsed: result.elapsed,
                 sessionFile: result.sessionFile,
+                ...attempts,
                 error: "cancelled",
                 cancellation,
             };
@@ -295,10 +300,13 @@ export function createDelivery({ runtime, updateWidget, startPersistentStopTimeo
         if (result.ping) {
             // The sidecar's name is child-written; headers use the parent-owned name.
             const details = {
+                id: running.id,
                 name: running.name,
                 ...item,
                 message: result.ping.message,
                 sessionFile: result.sessionFile,
+                elapsed: result.elapsed,
+                ...attempts,
             };
             if (result.ping.name !== running.name)
                 details.reportedName = result.ping.name;
@@ -334,12 +342,14 @@ export function createDelivery({ runtime, updateWidget, startPersistentStopTimeo
                 ? { ...result, ...io.readResumeResult() }
                 : result;
             const details = {
+                id: running.id,
                 name: running.name,
                 ...item,
                 task: task.prompt,
                 exitCode: result.exitCode,
                 elapsed: result.elapsed,
                 sessionFile: presentationResult.sessionFile,
+                ...attempts,
             };
             if (!io.readResumeResult)
                 details.agent = running.agent;
